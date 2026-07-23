@@ -740,7 +740,23 @@
                 resDiv.innerHTML = "";
             }
         }
-    </script>
+    </script><script>
+  const scriptURL = 'https://script.google.com/macros/s/AKfycbySffEN1aX4A-FMKk6c-RSzso8lZG8ZkTyT7ujAlgCZTa7nYLdacTMIfQExwG6GbMol/exec';
+  const form = document.forms['submit-to-google-sheet'];
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    fetch(scriptURL, { method: 'POST', body: new FormData(form)})
+      .then(response => {
+        alert('डाटा सफलतापूर्वक गुगल सिटमा गयो!');
+        form.reset();
+      })
+      .catch(error => console.error('Error!', error.message))
+  });
+</script>
+
+</body>
+</html>
     <div style="text-align: center; padding: 15px; background-color: #002b49; color: #c5a059; font-size: 13px; font-weight: bold; border-top: 2px solid #c5a059; margin-top: 20px;">
         Design & Developed By: बैकुण्ठ सुवेदी
     </div>
