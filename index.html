@@ -740,7 +740,82 @@
                 resDiv.innerHTML = "";
             }
         }
-    </script><script>
+    </script><script>"492150": { pres: true, rank: "प्रज", name: "सुभाष अधिकारी" },
+        "492312": { pres: true, rank: "प्रज", name: "दिनेश कार्की" }
+    };
+
+    // लगइन प्रमाणीकरण
+    function handleLogin(event) {
+        event.preventDefault();
+        const user = document.getElementById("login_user").value;
+        const pass = document.getElementById("login_pass").value;
+        
+        // साधारण लगइन जाँच (तруपाइले यसलाई परिवर्तन गर्न सक्नुहुन्छ)
+        if (user === "admin" && pass === "admin123") {
+            document.getElementById("login-overlay").style.display = "none";
+        } else {
+            document.getElementById("login_error").style.display = "block";
+        }
+    }
+
+    // कम्प्युटर कोड हाल्दा स्वतः कर्मचारीको नाम र दर्जा ल्याउने फंクション
+    function fetchEmployee(code) {
+        const infoDiv = document.getElementById("emp_info");
+        const rankInput = document.getElementById("rank");
+        const nameInput = document.getElementById("name");
+
+        if (employeeDatabase[code]) {
+            const emp = employeeDatabase[code];
+            rankInput.value = emp.rank;
+            nameInput.value = emp.name;
+            infoDiv.innerText = "कर्मचारी फेला पर्‍यो।";
+            infoDiv.style.color = "green";
+        } else {
+            rankInput.value = "";
+            nameInput.value = "";
+            infoDiv.innerText = "यस कोड भएको कर्मचारी फेला परेन।";
+            infoDiv.style.color = "#d9534f";
+        }
+    }
+
+    // बिदा फारम डाटा Google Sheets मा पठाउने फंクション
+    function addLeave(event) {
+        event.preventDefault();
+        
+        const formData = {
+            computer_code: document.getElementById("computer_code").value,
+            rank: document.getElementById("rank").value,
+            name: document.getElementById("name").value,
+            leave_type: document.getElementById("leave_type").value,
+            start_date: document.getElementById("start_date").value,
+            total_days: document.getElementById("total_days").value,
+            public_holidays: document.getElementById("public_holidays").value
+        };
+
+        // GAS Web App URL यहाँ राख्नुहोला
+        const scriptURL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_URL_HERE";
+
+        fetch(scriptURL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        })
+        .then(() => {
+            alert("बिदा रेकर्ड सफलतापूर्वक सुरक्षित गरियो!");
+            document.getElementById("leaveForm").reset();
+            document.getElementById("emp_info").innerText = "";
+        })
+        .catch(error => {
+            alert("त्रुटि देखियो: " + error);
+        });
+    }
+
+    function fetchHistory(code) {
+        // इतिहास खोज्ने कोड यहाँ लेख्न सकिन्छ
+    }
+    </script>
+
 // Google Apps Script को Web App URL यहाँ राख्नुहोस्
 const scriptURL = 'YOUR_WEB_APP_URL_HERE';https://script.google.com/macros/s/AKfycbwxWxeGIstGkXyTfklVTI-Od9q8UMzJcmDmIlnbkCIY_ip6BETNrjN_osXBW-SOV-j5/exec
 
