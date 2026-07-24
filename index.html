@@ -447,7 +447,6 @@
                 })
                 .catch(error => {
                     console.error('Error loading data:', error);
-                    // गुगल शिटबाट डाटा लोड हुन समस्या भएमा प्रयोगकर्तालाई सूचना दिने
                 });
         }
 
@@ -542,7 +541,6 @@
                 document.getElementById('submit_btn').disabled = false;
                 document.getElementById('loading-indicator').style.display = 'none';
                 
-                // गुगल शिटमा डाटा सेभ भएपछि पुन: डाटा लोड गर्ने
                 setTimeout(loadDataFromSheet, 2000);
             })
             .catch(error => {
@@ -585,6 +583,16 @@
             }
         }
 
+        // मितिलाई सफा र सहि रूपमा देखाउने सहायक फंक्सन
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            let str = String(dateStr);
+            if (str.includes('T')) {
+                return str.split('T')[0];
+            }
+            return str;
+        }
+
         function renderTables() {
             const activeBody = document.getElementById('active_leaves_body');
             const returnedBody = document.getElementById('returned_leaves_body');
@@ -604,9 +612,9 @@
                         <td>${item.rank}</td>
                         <td>${item.name}</td>
                         <td>${item.type}</td>
-                        <td>${item.startDate}</td>
+                        <td>${formatDate(item.startDate)}</td>
                         <td>${item.days} दिन</td>
-                        <td style="font-weight: bold; color: #d9534f;">${item.returnDate || '-'}</td>
+                        <td style="font-weight: bold; color: #d9534f;">${formatDate(item.returnDate)}</td>
                         <td class="action-col"><button onclick="openModal(${item.id})" style="padding: 5px 10px; margin:0; background:#28a745;">हाजिर गराउने</button></td>
                     </tr>
                 `).join('');
@@ -621,7 +629,7 @@
                         <td>${item.rank}</td>
                         <td>${item.name}</td>
                         <td>${item.type}</td>
-                        <td>${item.startDate}</td>
+                        <td>${formatDate(item.startDate)}</td>
                         <td>${item.days} दिन</td>
                         <td style="color: #d9534f; font-weight: 500;">${item.remarks || '-'}</td>
                         <td style="color: green; font-weight: bold;">हाजिर भई फर्केको</td>
@@ -644,7 +652,7 @@
                 resultDiv.innerHTML = `<table>
                     <thead><tr><th>किसिम</th><th>सुरु मिति</th><th>दिन</th><th>कैफियत</th><th>स्थिति</th></tr></thead>
                     <tbody>
-                        ${history.map(h => `<tr><td>${h.type}</td><td>${h.startDate}</td><td>${h.days}</td><td>${h.remarks || '-'}</td><td>${h.status === 'Active' ? 'बिदामा' : 'फर्केको'}</td></tr>`).join('')}
+                        ${history.map(h => `<tr><td>${h.type}</td><td>${formatDate(h.startDate)}</td><td>${h.days}</td><td>${h.remarks || '-'}</td><td>${h.status === 'Active' ? 'बिदामा' : 'फर्केको'}</td></tr>`).join('')}
                     </tbody>
                 </table>`;
             }
