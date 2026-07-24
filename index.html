@@ -110,7 +110,6 @@
         tr:nth-child(even) { background-color: #f9f9f9; }
         .info { color: #d9534f; font-size: 12px; margin-top: 3px; font-weight: 500; }
 
-        /* Loading Spinner */
         #loading-indicator {
             display: none;
             color: #d9534f;
@@ -120,7 +119,6 @@
             margin-top: 5px;
         }
 
-        /* Footer Style */
         footer {
             background-color: var(--police-blue);
             color: white;
@@ -135,7 +133,6 @@
             font-weight: bold;
         }
 
-        /* Login Overlay */
         #login-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -151,7 +148,6 @@
         .login-box h2 { color: var(--police-blue); margin-top: 0; font-size: 18px; }
         .login-error { color: #d9534f; font-size: 12px; margin-top: 10px; display: none; }
 
-        /* Modal/Popup for Late Remarks */
         #modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -166,7 +162,6 @@
         }
         .modal-box h4 { margin-top: 0; color: var(--police-blue); }
 
-        /* Print Styling */
         @media print {
             body * { visibility: hidden; }
             #printable-active-list, #printable-active-list * { visibility: visible; }
@@ -180,7 +175,6 @@
 </head>
 <body>
 
-    <!-- Login Overlay -->
     <div id="login-overlay">
         <div class="login-box">
             <h2>प्रणाली लगइन</h2>
@@ -196,7 +190,6 @@
         </div>
     </div>
 
-    <!-- Modal for Late Remarks -->
     <div id="modal-overlay">
         <div class="modal-box">
             <h4>हाजिर गराउने (कैफियत विवरण)</h4>
@@ -216,7 +209,6 @@
     </header>
 
     <div class="main-container">
-        <!-- बिदा दर्ता फारम -->
         <div class="form-container">
             <h3>बिदा दर्ता फारम</h3>
             <form id="leaveForm" onsubmit="addLeave(event)">
@@ -258,7 +250,6 @@
         </div>
 
         <div class="right-container">
-            <!-- हाल बिदामा रहेका कर्मचारीहरूको सूची -->
             <div class="table-container" id="printable-active-list">
                 <h3>
                     <span>हाल बिदामा रहेका प्रहरी कर्मचारीहरूको नामावली (<span id="active_count" style="color: #d9534f;">0</span> जना)</span>
@@ -286,7 +277,6 @@
                 </table>
             </div>
 
-            <!-- बिदाबाट हाजिर भई फर्केका प्रहरी कर्मचारीहरूको सूची -->
             <div class="table-container" style="border-top-color: #28a745;">
                 <h3 style="color: #28a745;">
                     <span>बिदाबाट हाजिर भई फर्केका प्रहरी कर्मचारीहरूको सूची</span>
@@ -312,7 +302,6 @@
                 </table>
             </div>
 
-            <!-- कर्मचारीको बिदा इतिहास (History Search) -->
             <div class="history-container">
                 <h3>कर्मचारी बिदाको इतिहास खोज्नुहोस्</h3>
                 <label>कम्प्युटर कोड राख्नुहोस्:</label>
@@ -327,7 +316,6 @@
     </footer>
 
     <script>
-        // गुगल एप्स स्क्रिप्टको वेब एप युआरएल
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxglfVnEq7qJMhjyjuVMwkBpu8JabxSGxN57OWvMgiG_vzdUPipRh03caR3QOnrJO8/exec"; 
 
         const employeeDatabase = {
@@ -406,7 +394,7 @@
             "391411": { rank: "प्रह", name: "शर्मिला कुँवर" },
             "389290": { rank: "प्रह", name: "दिपक पाण्डे" },
             "388846": { rank: "प्रह", name: "तिलक हमाल" },
-            "389872": { rank: "प्रह", name: "पुष्प राज महत" },
+            "389872": { rank: "প্রহ", name: "पुष्प राज महत" },
             "381805": { rank: "प्रह", name: "लाल बहादुर खत्री" },
             "376312": { rank: "प्रह", name: "शिव कुमार चौधरी" },
             "385804": { rank: "प्रह", name: "गजै सिंह महरा" },
@@ -583,13 +571,17 @@
             }
         }
 
-        // मितिलाई सफा र सहि रूपमा देखाउने सहायक फंक्सन
+        // फिक्स गरिएको मिति देखाउने फंक्सन (ISO format र समय हटाएर केवल मिति मात्र देखाउने)
         function formatDate(dateStr) {
             if (!dateStr) return '-';
-            let str = String(dateStr);
+            let str = String(dateStr).trim();
+            
+            // यदि 'T' अक्षर छ भने त्यसलाई काटेर अगाडिको मिति मात्र लिने (जस्तै: 2083-01-02T18:18:44.000Z बाट 2083-01-02 निकाल्ने)
             if (str.includes('T')) {
-                return str.split('T')[0];
+                str = str.split('T')[0];
             }
+            
+            // यदि हाइफन (-) आएको छ भने त्यसलाई स्ल्याश (/) मा बदल्ने (चाहनुहुन्छ भने राख्न सकिन्छ)
             return str;
         }
 
