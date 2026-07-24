@@ -615,18 +615,18 @@
             if (returnedList.length === 0) {
                 returnedBody.innerHTML = `<tr><td colspan="8">बिदाबाट हाजिर भएका कुनै पनि रेकर्ड छैनन्।</td></tr>`;
             } else {
-                returnedBody.innerHTML = returnedList.map(item => `
-                    <tr>
-                        <td>${item.code}</td>
-                        <td>${item.rank}</td>
-                        <td>${item.name}</td>
-                        <td>${item.type}</td>
-                        <td>${formatDate(item.startDate)}</td>
-                        <td>${item.days} दिन</td>
-                        <td style="color: #d9534f; font-weight: 500;">${item.remarks || '-'}</td>
-                        <td style="color: green; font-weight: bold;">हाजिर भई फर्केको</td>
-                    </tr>
-                `).join('');
+               returnedBody.innerHTML = returnedList.slice(0, 15).map(item => `
+    <tr>
+        <td>${item.code}</td>
+        <td>${item.rank}</td>
+        <td>${item.name}</td>
+        <td>${item.type}</td>
+        <td>${formatDate(item.startDate)}</td>
+        <td>${item.days} दिन</td>
+        <td style="color: #d9534f; font-weight: 500;">${item.remarks || '-'}</td>
+        <td style="color: green; font-weight: bold;">हाजिर भई फर्केको</td>
+    </tr>
+`).join('');
             }
         }
 
