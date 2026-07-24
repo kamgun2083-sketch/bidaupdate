@@ -204,24 +204,118 @@
                     <button class="print-btn" onclick="window.print()">प्रिन्ट गर्नुहोस्</button>
                 </h3>
                 <table id="onLeaveTable">
-  <thead>
-    <tr>
-      <th>कम्प्युटर कोड</th>
-      <th>दर्जा</th>
-      <th>नाम थर</th>
-      <th>बिदाको किसिम</th>
-      <th>सुरु मिति (वि.सं.)</th>
-      <th>हाजिर हुने मिति</th> <!-- 'समाप्ति विवरण' को ठाउँमा -->
-      <th>दिन</th>
-      <th>कैफियत</th>         <!-- नयाँ म्यानुअल कैफियत बक्स -->
-      <th>हाजिर भएको (Mark Present)</th>
-    </tr>
-  </thead>
-  <tbody id="onLeaveTableBody">
-    <!-- डाटा यहाँ लोड हुन्छ -->
-  </tbody>
-</table>
-            </div>
+  <script> 
+      // १. वि.सं. सुरु मितिमा बिदा बसेको दिन जोडेर हाजिर हुने मिति निकाल्ने फन्क्सन
+function calculateReturnDate(bsDateStr, daysToAdd) {
+  if (!bsDateStr) return '';
+  let parts = bsDateStr.split(/[-/]/);
+  if (parts.length < 3) return bsDateStr;
+
+  let year = parseInt(parts[0]);
+  let month = parseInt(parts[1]);
+  let day = parseInt(parts[2]);
+
+  let totalDays = day + parseInt(daysToAdd);
+  
+  // साधारण ३० दिनको महिना गणना आधार मान्दा:
+  while (totalDays > 30) {
+    totalDays -= 30;
+    month++;
+    if (month > 12) {
+      month = 1;
+      year++;
+    }
+  }
+
+  let formattedMonth = month < 10 ? '0' + month : month;
+  let formattedDay = totalDays < 10 ? '0' + totalDays : totalDays;
+
+  return `${year}-${formattedMonth}-${formattedDay}`;
+}
+
+// २. तपाईंको <tbody> भित्र डाटा रेन्डर गर्ने फन्क्सन
+function renderOnLeaveTable(dataList) {
+  const tbody = document.getElementById('onLeaveTableBody');
+  tbody.innerHTML = '';
+
+  if (!dataList || dataList.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">हाल कोही पनि बिदामा छैनन्।</td></tr>`;
+    return;
+  }
+
+  dataList.forEach((employee, index) => {
+    // सुरु मिति र दिनबाट स्वतः हाजिर हुने मिति निकाल्ने
+    const autoReturnDate = calculateReturnDate(employee.startDate, employee.days);
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${employee.code}</td>
+      <td>${employee.rank}</td>
+      <td>${employee.name}</td>
+      <td>${employee.leaveType}</td>
+      <td>${employee.startDate}</td>
+      
+      <!-- १. सुरु मिति + दिन जोडेर स्वतः आउने हाजिर हुने मिति -->
+      <td><strong>${autoReturnDate}</strong></td>
+      
+      <td>${employee.days}</td>
+      
+      <!-- २. टाइप गर्न मिल्ने कैफियत बक्स -->
+      <td>
+        <input 
+          type="text" 
+          id="remarks_${index}" 
+          value="${employee.remarks || ''}" 
+          placeholder="कैफियत..." 
+          style="width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 2px 5px;"
+        />
+      </td>
+      
+      <!-- ३. हाजिर भएकोमा टिक (Checkbox) लगाउने -->
+      <td style="text-align: center;">
+        <input 
+          type="checkbox" 
+          id="check_present_${index}" 
+          style="width: 18px; height: 18px; cursor: pointer;"
+          onchange="markAsPresent(${index}, '${autoReturnDate}')"
+        />
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// ३. चेकबक्समा टिक लगाउँदा काम गर्ने फन्क्सन
+function markAsPresent(index, calculatedReturnDate) {
+  const isChecked = document.getElementById(`check_present_${index}`).checked;
+  
+  if (isChecked) {
+    const remarkValue = document.getElementById(`remarks_${index}`).value;
+
+    if (confirm("के तपाईं यी कर्मचारीलाई हाजिर गराउन चाहनुहुन्छ?")) {
+      // हाजिर गराउँदा प्रयोग हुने डाटा object:
+      const presentData = {
+        ...onLeaveList[index],
+        actualReturnDate: calculatedReturnDate,
+        remarks: remarkValue
+      };
+
+      // यहाँ तपाईंको बिदामा रहेकाहरूको Array (onLeaveList) बाट हटाउने र 
+      // हाजिर भएकाहरूको सूचीमा Thapne (Push) गर्ने कोड राख्नुहोस्।
+      
+      /* उदाहरण:
+         onLeaveList.splice(index, 1);
+         returnedList.push(presentData);
+         renderOnLeaveTable(onLeaveList);
+      */
+    } else {
+      // क्यान्सिल गरेमा अनचेक (Uncheck) गरिदिने
+      document.getElementById(`check_present_${index}`).checked = false;
+    }
+  }
+}
+   <script>        
+   </div>
 
             <!-- बिदाबाट हाजिर भई फर्केका प्रहरी कर्मचारीहरूको सूची -->
             <div class="table-container" style="border-top-color: #28a745;">
