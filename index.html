@@ -110,6 +110,16 @@
         tr:nth-child(even) { background-color: #f9f9f9; }
         .info { color: #d9534f; font-size: 12px; margin-top: 3px; font-weight: 500; }
 
+        /* Loading Spinner */
+        #loading-indicator {
+            display: none;
+            color: #d9534f;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+        }
+
         /* Footer Style */
         footer {
             background-color: var(--police-blue);
@@ -201,7 +211,7 @@
     <header>
         <div>
             <h1>काठमाडौं उपत्यका प्रहरी सशस्त्र प्रहरी गण नं. २ महाराजगंज</h1>
-            <p>प्रहरी कर्मचारी बिदा व्यवस्थापन प्रणाली</p>
+            <p>प्रहरी कर्मचारी बिदा व्यवस्थापन प्रणाली (Cloud Connected)</p>
         </div>
     </header>
 
@@ -239,11 +249,11 @@
                 <label>सार्वजनिक बिदा (Public Holidays):</label>
                 <input type="number" id="public_holidays" value="0">
 
-                <!-- स्वतः गणना भएर देखिने हाजिर हुने मिति -->
                 <label style="color: #28a745;">हाजिर हुने मिति (स्वतः गणना):</label>
                 <input type="text" id="calculated_return_date" readonly style="background-color: #e9ecef; font-weight: bold; color: #28a745;" placeholder="मिति गणना हुनेछ">
 
-                <button type="submit">बिदा रेकर्ड सुरक्षित गर्नुहोस्</button>
+                <button type="submit" id="submit_btn">बिदा रेकर्ड सुरक्षित गर्नुहोस्</button>
+                <div id="loading-indicator">डाटा सेभ हुँदैछ, कृपया पर्खनुहोस्...</div>
             </form>
         </div>
 
@@ -270,7 +280,7 @@
                     </thead>
                     <tbody id="active_leaves_body">
                         <tr>
-                            <td colspan="8">हाल कोही पनि बिदामा छैनन्।</td>
+                            <td colspan="8">डाटा लोड हुँदैछ...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -296,7 +306,7 @@
                     </thead>
                     <tbody id="returned_leaves_body">
                         <tr>
-                            <td colspan="8">बिदाबाट हाजिर भएका कुनै पनि रेकर्ड छैनन्।</td>
+                            <td colspan="8">डाटा लोड हुँदैछ...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -312,13 +322,14 @@
         </div>
     </div>
 
-    <!-- Footer Required -->
     <footer>
         Design & Developed By: <span>बैकुण्ठ सुवेदी</span>
     </footer>
 
     <script>
-        // कर्मचारी डाटाबेस
+        // ** यहाँ तपाईंले चरण १ मा पाएको Google Apps Script को Web App URL राख्नुहोला **
+        const SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE";
+
         const employeeDatabase = {
             "33223": { rank: "प्रउ", name: "तिलक भारती" },
             "34468": { rank: "प्रनाउ", name: "खगेन्द्र बहादुर खड्का" },
@@ -411,7 +422,7 @@
             "363437": { rank: "प्रह", name: "निमलाल थारु" }
         };
 
-        let leavesData = JSON.parse(localStorage.getItem('police_leaves')) || [];
+        let leavesData = [];
         let selectedLeaveId = null;
 
         function handleLogin(event) {
@@ -421,9 +432,23 @@
             
             if (user === "admin" && pass === "nepalpolice2") {
                 document.getElementById('login-overlay').style.display = 'none';
+                loadDataFromSheet();
             } else {
                 document.getElementById('login_error').style.display = 'block';
             }
+        }
+
+        function loadDataFromSheet() {
+            fetch(SCRIPT_URL)
+                .then(response => response.json())
+                .then(data => {
+                    leavesData = data;
+                    renderTables();
+                })
+                .catch(error => {
+                    console.error('Error loading data:', error);
+                    alert('गुगल शिटबाट डाटा लोड गर्न समस्या भयो!');
+                });
         }
 
         function fetchEmployee(code) {
@@ -442,9 +467,7 @@
             }
         }
 
-        // मिति स्वतः गणना गर्ने फंक्सन (/ र - दुवै सपोर्ट गर्ने)
         function calculateReturnDate(startDate, totalDays) {
-            // / वा - लाई युनिफाइड गर्न / मा बदल्ने
             let cleanDate = startDate.replace(/-/g, '/');
             let parts = cleanDate.split('/');
             
@@ -502,14 +525,32 @@
                 status: 'Active'
             };
 
-            leavesData.push(newLeave);
-            localStorage.setItem('police_leaves', JSON.stringify(leavesData));
-            
-            document.getElementById('leaveForm').reset();
-            document.getElementById('rank').value = '';
-            document.getElementById('name').value = '';
-            document.getElementById('calculated_return_date').value = '';
-            renderTables();
+            document.getElementById('submit_btn').disabled = true;
+            document.getElementById('loading-indicator').style.display = 'block';
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'save', leave: newLeave })
+            })
+            .then(() => {
+                document.getElementById('leaveForm').reset();
+                document.getElementById('rank').value = '';
+                document.getElementById('name').value = '';
+                document.getElementById('calculated_return_date').value = '';
+                document.getElementById('submit_btn').disabled = false;
+                document.getElementById('loading-indicator').style.display = 'none';
+                
+                // फेरि डाटा लोड गर्ने
+                setTimeout(loadDataFromSheet, 1500);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('डाटा सेभ गर्न असफल भयो!');
+                document.getElementById('submit_btn').disabled = false;
+                document.getElementById('loading-indicator').style.display = 'none';
+            });
         }
 
         function openModal(id) {
@@ -526,16 +567,21 @@
         function confirmMarkPresent() {
             const remarks = document.getElementById('modal_remarks').value;
             if (selectedLeaveId !== null) {
-                leavesData = leavesData.map(item => {
-                    if (item.id === selectedLeaveId) {
-                        item.status = 'Returned';
-                        item.remarks = remarks || 'समयमै हाजिर भएको';
-                    }
-                    return item;
+                document.getElementById('modal-overlay').style.display = 'none';
+
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action: 'updateStatus', id: selectedLeaveId, remarks: remarks || 'समयमै हाजिर भएको' })
+                })
+                .then(() => {
+                    setTimeout(loadDataFromSheet, 1500);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('स्थिति अपडेट गर्न असफल भयो!');
                 });
-                localStorage.setItem('police_leaves', JSON.stringify(leavesData));
-                renderTables();
-                closeModal();
             }
         }
 
@@ -544,8 +590,9 @@
             const returnedBody = document.getElementById('returned_leaves_body');
             const activeCount = document.getElementById('active_count');
 
-            let activeList = leavesData.filter(item => item.status === 'Active');
-            const returnedList = leavesData.filter(item => item.status === 'Returned');
+            let activeList = leavesData.filter(item => String(item.status).trim() === 'Active');
+            let returnedList = leavesData.filter(item => String(item.status).trim() === 'Returned');
+            
             activeCount.innerText = activeList.length;
 
             if (activeList.length === 0) {
@@ -590,7 +637,7 @@
                 return;
             }
 
-            const history = leavesData.filter(item => item.code.includes(code));
+            const history = leavesData.filter(item => String(item.code).includes(code));
             if (history.length === 0) {
                 resultDiv.innerHTML = `<p style="font-size: 12px; color: #777;">यस कोडको कुनै बिदा इतिहास फेला परेन।</p>`;
             } else {
@@ -602,8 +649,6 @@
                 </table>`;
             }
         }
-
-        window.onload = renderTables;
     </script>
 </body>
 </html>
