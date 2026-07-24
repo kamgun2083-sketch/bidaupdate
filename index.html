@@ -135,21 +135,183 @@
 </head>
 <body>
 
-    <!-- Login Overlay -->
-    <div id="login-overlay">
-        <div class="login-box">
-            <h2>प्रणाली लगइन</h2>
-            <p style="font-size: 12px; color: #666;">कृपया युजर आईडी र पासवर्ड प्रविष्ट गर्नुहोस्</p>
-            <form onsubmit="handleLogin(event)">
-                <label style="text-align: left;">युजर आईडी (Username):</label>
-                <input type="text" id="login_user" placeholder="युजरनेम हाल्नुहोस्" required>
-                <label style="text-align: left;">पासवर्ड (Password):</label>
-                <input type="password" id="login_pass" placeholder="पासवर्ड हाल्नुहोस्" required>
-                <button type="submit">लगइन गर्नुहोस्</button>
-                <div id="login_error" class="login-error">गलत युजर आईडी वा पासवर्ड!</div>
-            </form>
-        </div>
-    </div>
+ <script>
+  // ==========================================
+  // १. लगइन सम्बन्धी कन्फिगरेसन र फन्क्सन
+  // ==========================================
+  const CORRECT_USERNAME = "admin";
+  const CORRECT_PASSWORD = "admin123";
+
+  function handleLogin(event) {
+    event.preventDefault();
+
+    const usernameInput = document.getElementById('login_user').value.trim();
+    const passwordInput = document.getElementById('login_pass').value;
+    const errorDiv = document.getElementById('login_error');
+
+    if (usernameInput === CORRECT_USERNAME && passwordInput === CORRECT_PASSWORD) {
+      if (errorDiv) errorDiv.style.display = "none";
+      
+      const loginOverlay = document.getElementById('login-overlay');
+      if (loginOverlay) {
+        loginOverlay.style.display = 'none';
+      }
+
+      sessionStorage.setItem('isLoggedIn', 'true');
+    } else {
+      if (errorDiv) errorDiv.style.display = "block";
+    }
+  }
+
+  // ==========================================
+  // २. डाटा स्टोर (LocalStorage/Session)
+  // ==========================================
+  let onLeaveList = JSON.parse(localStorage.getItem('onLeaveList')) || [];
+  let returnedList = JSON.parse(localStorage.getItem('returnedList')) || [];
+
+  // ==========================================
+  // ३. मिति गणना गर्ने फन्क्सन (वि.सं.)
+  // ==========================================
+  function calculateReturnDate(bsDateStr, daysToAdd) {
+    if (!bsDateStr) return '';
+    let parts = bsDateStr.split(/[-/]/);
+    if (parts.length < 3) return bsDateStr;
+
+    let year = parseInt(parts[0]);
+    let month = parseInt(parts[1]);
+    let day = parseInt(parts[2]);
+
+    let totalDays = day + parseInt(daysToAdd);
+    
+    // साधारण ३० दिनको महिना गणना आधार मान्दा:
+    while (totalDays > 30) {
+      totalDays -= 30;
+      month++;
+      if (month > 12) {
+        month = 1;
+        year++;
+      }
+    }
+
+    let formattedMonth = month < 10 ? '0' + month : month;
+    let formattedDay = totalDays < 10 ? '0' + totalDays : totalDays;
+
+    return `${year}-${formattedMonth}-${formattedDay}`;
+  }
+
+  // ==========================================
+  // ४. बिदामा रहेका कर्मचारीको तालिका रेन्डर गर्ने
+  // ==========================================
+  function renderOnLeaveTable(dataList) {
+    const tbody = document.getElementById('onLeaveTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+
+    // बिदामा रहेका कर्मचारीको सङ्ख्या अपडेट गर्ने
+    const countElement = document.getElementById('onLeaveCount');
+    if (countElement) {
+      countElement.innerText = dataList ? dataList.length : 0;
+    }
+
+    if (!dataList || dataList.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">हाल कोही पनि बिदामा छैनन्।</td></tr>`;
+      return;
+    }
+
+    dataList.forEach((employee, index) => {
+      const autoReturnDate = calculateReturnDate(employee.startDate, employee.days);
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${employee.code || ''}</td>
+        <td>${employee.rank || ''}</td>
+        <td>${employee.name || ''}</td>
+        <td>${employee.leaveType || ''}</td>
+        <td>${employee.startDate || ''}</td>
+        <td><strong>${autoReturnDate}</strong></td>
+        <td>${employee.days || 0}</td>
+        <td>
+          <input 
+            type="text" 
+            id="remarks_${index}" 
+            value="${employee.remarks || ''}" 
+            placeholder="कैफियत..." 
+            style="width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 2px 5px;"
+            onchange="updateRemark(${index}, this.value)"
+          />
+        </td>
+        <td style="text-align: center;">
+          <input 
+            type="checkbox" 
+            id="check_present_${index}" 
+            style="width: 18px; height: 18px; cursor: pointer;"
+            onchange="markAsPresent(${index}, '${autoReturnDate}')"
+          />
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  // ==========================================
+  // ५. कैफियत अटो-सेभ गर्ने फन्क्सन
+  // ==========================================
+  function updateRemark(index, value) {
+    if (onLeaveList[index]) {
+      onLeaveList[index].remarks = value;
+      localStorage.setItem('onLeaveList', JSON.stringify(onLeaveList));
+    }
+  }
+
+  // ==========================================
+  // ६. हाजिर गराउने फन्क्सन (Checkbox Click)
+  // ==========================================
+  function markAsPresent(index, calculatedReturnDate) {
+    const checkElem = document.getElementById(`check_present_${index}`);
+    if (!checkElem) return;
+
+    if (checkElem.checked) {
+      const remarkValue = document.getElementById(`remarks_${index}`).value;
+
+      if (confirm("के तपाईं यी कर्मचारीलाई हाजिर गराउन चाहनुहुन्छ?")) {
+        const presentPerson = onLeaveList.splice(index, 1)[0];
+        presentPerson.actualReturnDate = calculatedReturnDate;
+        presentPerson.remarks = remarkValue;
+        presentPerson.status = "हाजिर भयो (Present)";
+
+        returnedList.push(presentPerson);
+
+        localStorage.setItem('onLeaveList', JSON.stringify(onLeaveList));
+        localStorage.setItem('returnedList', JSON.stringify(returnedList));
+
+        renderOnLeaveTable(onLeaveList);
+        
+        if (typeof renderReturnedTable === 'function') {
+          renderReturnedTable(returnedList);
+        }
+      } else {
+        checkElem.checked = false;
+      }
+    }
+  }
+
+  // ==========================================
+  // ७. पेज लोड हुँदा चल्ने प्रारम्भिक (Initialization) कोड
+  // ==========================================
+  document.addEventListener('DOMContentLoaded', function() {
+    // लगइन स्थिति जाँच्ने
+    if (sessionStorage.getItem('isLoggedIn') === 'true') {
+      const loginOverlay = document.getElementById('login-overlay');
+      if (loginOverlay) {
+        loginOverlay.style.display = 'none';
+      }
+    }
+
+    // तालिका लोड गर्ने
+    renderOnLeaveTable(onLeaveList);
+  });
+</script>
 
     <header>
         <div>
