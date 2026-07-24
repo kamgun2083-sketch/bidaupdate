@@ -204,117 +204,118 @@
                     <button class="print-btn" onclick="window.print()">प्रिन्ट गर्नुहोस्</button>
                 </h3>
                 <table id="onLeaveTable">
-  <script> 
-      // १. वि.सं. सुरु मितिमा बिदा बसेको दिन जोडेर हाजिर हुने मिति निकाल्ने फन्क्सन
-function calculateReturnDate(bsDateStr, daysToAdd) {
-  if (!bsDateStr) return '';
-  let parts = bsDateStr.split(/[-/]/);
-  if (parts.length < 3) return bsDateStr;
+  <script>
+  // १. लोकल स्टोरेजबाट डाटा लिने (नभए खाली लिस्ट बनाउने)
+  let onLeaveList = JSON.parse(localStorage.getItem('onLeaveList')) || [];
+  let returnedList = JSON.parse(localStorage.getItem('returnedList')) || [];
 
-  let year = parseInt(parts[0]);
-  let month = parseInt(parts[1]);
-  let day = parseInt(parts[2]);
+  // २. वि.सं. सुरु मितिमा बिदा बसेको दिन जोडेर हाजिर हुने मिति निकाल्ने फन्क्सन
+  function calculateReturnDate(bsDateStr, daysToAdd) {
+    if (!bsDateStr) return '';
+    let parts = bsDateStr.split(/[-/]/);
+    if (parts.length < 3) return bsDateStr;
 
-  let totalDays = day + parseInt(daysToAdd);
-  
-  // साधारण ३० दिनको महिना गणना आधार मान्दा:
-  while (totalDays > 30) {
-    totalDays -= 30;
-    month++;
-    if (month > 12) {
-      month = 1;
-      year++;
+    let year = parseInt(parts[0]);
+    let month = parseInt(parts[1]);
+    let day = parseInt(parts[2]);
+
+    let totalDays = day + parseInt(daysToAdd);
+    
+    // साधारण ३० दिनको महिना गणना आधार मान्दा:
+    while (totalDays > 30) {
+      totalDays -= 30;
+      month++;
+      if (month > 12) {
+        month = 1;
+        year++;
+      }
+    }
+
+    let formattedMonth = month < 10 ? '0' + month : month;
+    let formattedDay = totalDays < 10 ? '0' + totalDays : totalDays;
+
+    return `${year}-${formattedMonth}-${formattedDay}`;
+  }
+
+  // ३. <tbody> भित्र डाटा रेन्डर गर्ने फन्क्सन
+  function renderOnLeaveTable(dataList) {
+    const tbody = document.getElementById('onLeaveTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!dataList || dataList.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">हाल कोही पनि बिदामा छैनन्।</td></tr>`;
+      return;
+    }
+
+    dataList.forEach((employee, index) => {
+      const autoReturnDate = calculateReturnDate(employee.startDate, employee.days);
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${employee.code || ''}</td>
+        <td>${employee.rank || ''}</td>
+        <td>${employee.name || ''}</td>
+        <td>${employee.leaveType || ''}</td>
+        <td>${employee.startDate || ''}</td>
+        <td><strong>${autoReturnDate}</strong></td>
+        <td>${employee.days || 0}</td>
+        <td>
+          <input 
+            type="text" 
+            id="remarks_${index}" 
+            value="${employee.remarks || ''}" 
+            placeholder="कैफियत..." 
+            style="width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 2px 5px;"
+          />
+        </td>
+        <td style="text-align: center;">
+          <input 
+            type="checkbox" 
+            id="check_present_${index}" 
+            style="width: 18px; height: 18px; cursor: pointer;"
+            onchange="markAsPresent(${index}, '${autoReturnDate}')"
+          />
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  // ४. चेकबक्समा टिक लगाउँदा काम गर्ने पूर्ण फन्क्सन
+  function markAsPresent(index, calculatedReturnDate) {
+    const isChecked = document.getElementById(`check_present_${index}`).checked;
+    
+    if (isChecked) {
+      const remarkValue = document.getElementById(`remarks_${index}`).value;
+
+      if (confirm("के तपाईं यी कर्मचारीलाई हाजिर गराउन चाहनुहुन्छ?")) {
+        // बिदाको सूचीबाट हटाउने र विवरण सेभ गर्ने
+        const presentPerson = onLeaveList.splice(index, 1)[0];
+        presentPerson.actualReturnDate = calculatedReturnDate;
+        presentPerson.remarks = remarkValue;
+        presentPerson.status = "हाजिर भयो (Present)";
+
+        // हाजिर भएको सूचीमा थप्ने
+        returnedList.push(presentPerson);
+
+        // लोकल स्टोरेज अपडेट गर्ने
+        localStorage.setItem('onLeaveList', JSON.stringify(onLeaveList));
+        localStorage.setItem('returnedList', JSON.stringify(returnedList));
+
+        // टेबल पुन: रेन्डर गर्ने
+        renderOnLeaveTable(onLeaveList);
+      } else {
+        document.getElementById(`check_present_${index}`).checked = false;
+      }
     }
   }
 
-  let formattedMonth = month < 10 ? '0' + month : month;
-  let formattedDay = totalDays < 10 ? '0' + totalDays : totalDays;
-
-  return `${year}-${formattedMonth}-${formattedDay}`;
-}
-
-// २. तपाईंको <tbody> भित्र डाटा रेन्डर गर्ने फन्क्सन
-function renderOnLeaveTable(dataList) {
-  const tbody = document.getElementById('onLeaveTableBody');
-  tbody.innerHTML = '';
-
-  if (!dataList || dataList.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">हाल कोही पनि बिदामा छैनन्।</td></tr>`;
-    return;
-  }
-
-  dataList.forEach((employee, index) => {
-    // सुरु मिति र दिनबाट स्वतः हाजिर हुने मिति निकाल्ने
-    const autoReturnDate = calculateReturnDate(employee.startDate, employee.days);
-
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${employee.code}</td>
-      <td>${employee.rank}</td>
-      <td>${employee.name}</td>
-      <td>${employee.leaveType}</td>
-      <td>${employee.startDate}</td>
-      
-      <!-- १. सुरु मिति + दिन जोडेर स्वतः आउने हाजिर हुने मिति -->
-      <td><strong>${autoReturnDate}</strong></td>
-      
-      <td>${employee.days}</td>
-      
-      <!-- २. टाइप गर्न मिल्ने कैफियत बक्स -->
-      <td>
-        <input 
-          type="text" 
-          id="remarks_${index}" 
-          value="${employee.remarks || ''}" 
-          placeholder="कैफियत..." 
-          style="width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 2px 5px;"
-        />
-      </td>
-      
-      <!-- ३. हाजिर भएकोमा टिक (Checkbox) लगाउने -->
-      <td style="text-align: center;">
-        <input 
-          type="checkbox" 
-          id="check_present_${index}" 
-          style="width: 18px; height: 18px; cursor: pointer;"
-          onchange="markAsPresent(${index}, '${autoReturnDate}')"
-        />
-      </td>
-    `;
-    tbody.appendChild(row);
+  // ५. पेज लोड हुनेबित्तिकै टेबल देखाउने
+  document.addEventListener('DOMContentLoaded', function() {
+    renderOnLeaveTable(onLeaveList);
   });
-}
-
-// ३. चेकबक्समा टिक लगाउँदा काम गर्ने फन्क्सन
-function markAsPresent(index, calculatedReturnDate) {
-  const isChecked = document.getElementById(`check_present_${index}`).checked;
-  
-  if (isChecked) {
-    const remarkValue = document.getElementById(`remarks_${index}`).value;
-
-    if (confirm("के तपाईं यी कर्मचारीलाई हाजिर गराउन चाहनुहुन्छ?")) {
-      // हाजिर गराउँदा प्रयोग हुने डाटा object:
-      const presentData = {
-        ...onLeaveList[index],
-        actualReturnDate: calculatedReturnDate,
-        remarks: remarkValue
-      };
-
-      // यहाँ तपाईंको बिदामा रहेकाहरूको Array (onLeaveList) बाट हटाउने र 
-      // हाजिर भएकाहरूको सूचीमा Thapne (Push) गर्ने कोड राख्नुहोस्।
-      
-      /* उदाहरण:
-         onLeaveList.splice(index, 1);
-         returnedList.push(presentData);
-         renderOnLeaveTable(onLeaveList);
-      */
-    } else {
-      // क्यान्सिल गरेमा अनचेक (Uncheck) गरिदिने
-      document.getElementById(`check_present_${index}`).checked = false;
-    }
-  }
-}
-   <script>        
+</script>      
    </div>
 
             <!-- बिदाबाट हाजिर भई फर्केका प्रहरी कर्मचारीहरूको सूची -->
