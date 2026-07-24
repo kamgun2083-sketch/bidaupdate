@@ -814,10 +814,10 @@
     function fetchHistory(code) {
         // इतिहास खोज्ने कोड यहाँ लेख्न सकिन्छ
     }
-    </script>
+    <script>
+    // Google Apps Script को सहि Web App URL
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwxWXeGIstGkXyTfklVTI-Od9q8UMzJcmDmIlnbkCIY_ip6BETNrjN_osXBW-SOV-j5/exec';
 
-// Google Apps Script को सहि Web App URL यहाँ राखिएको छ
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwxWxeGIstGkXyTfklVTI-Od9q8UMzJcmDmIlnbkCIY_ip6BETNrjN_osXBW-SOV-j5/exec
     function addLeave(event) {
         event.preventDefault();
         
@@ -852,7 +852,7 @@
             body: JSON.stringify(formData)
         })
         .then(() => {
-            alert("बिदा रेकर्ड सफलताપूर्वक सुरक्षित भयो!");
+            alert("बिदा रेकर्ड सफलतापूर्वक सुरक्षित भयो!");
             document.getElementById('leaveForm').reset();
             document.getElementById('rank').value = '';
             document.getElementById('name').value = '';
