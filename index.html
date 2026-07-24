@@ -216,13 +216,17 @@
                 </select>
 
                 <label>सुरु गर्ने मिति (वि.सं.):</label>
-                <input type="text" id="start_date" placeholder="२०८२/०३/१५" required>
+                <input type="text" id="start_date" placeholder="२०८२/०३/१५" required oninput="autoCalculateReturnDate()">
 
                 <label>जम्मा दिन:</label>
-                <input type="number" id="total_days" placeholder="बिदा बसेको दिन" required>
+                <input type="number" id="total_days" placeholder="बिदा बसेको दिन" required oninput="autoCalculateReturnDate()">
 
                 <label>सार्वजनिक बिदा (Public Holidays):</label>
                 <input type="number" id="public_holidays" value="0">
+
+                <!-- स्वतः गणना भएर देखिने हाजिर हुने मिति (Form भित्र देखिने) -->
+                <label style="color: #28a745;">हाजिर हुने मिति (स्वतः गणना):</label>
+                <input type="text" id="calculated_return_date" readonly style="background-color: #e9ecef; font-weight: bold; color: #28a745;" placeholder="मिति गणना हुनेछ">
 
                 <button type="submit">बिदा रेकर्ड सुरक्षित गर्नुहोस्</button>
             </form>
@@ -426,16 +430,19 @@
             }
         }
 
-        // मिति जोड्ने सरल फंक्सन (उदाहरणका लागि मिति स्ट्रिङ र दिन हिसाब गर्ने)
+        // मिति स्वतः गणना गर्ने फंक्सन
         function calculateReturnDate(startDate, totalDays) {
-            // यदि मिति विक्रम संवत् ढाँचा (YYYY/MM/DD) मा छ भने दिन जोड्ने सामान्य लजिक
             let parts = startDate.split('/');
             if (parts.length === 3) {
                 let year = parseInt(parts[0]);
                 let month = parseInt(parts[1]);
-                let day = parseInt(parts[2]) + parseInt(totalDays);
+                let daysToAdd = parseInt(totalDays);
                 
-                // साधारण महिना ३० दिनको मानेर हिसाब (सामान्य क्याल्कुलेसन)
+                if (isNaN(year) || isNaN(month) || isNaN(daysToAdd)) return "";
+
+                let day = parseInt(parts[2]) + daysToAdd;
+                
+                // साधारणतया महिना ३० दिनको मानेर क्याल्कुलेसन गर्ने लजिक
                 while (day > 30) {
                     day -= 30;
                     month += 1;
@@ -446,7 +453,20 @@
                 }
                 return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
             }
-            return "तولना गर्न मिलेन";
+            return "";
+        }
+
+        function autoCalculateReturnDate() {
+            const startDate = document.getElementById('start_date').value;
+            const totalDays = document.getElementById('total_days').value;
+            const returnDateInput = document.getElementById('calculated_return_date');
+
+            if (startDate && totalDays) {
+                let calculated = calculateReturnDate(startDate, totalDays);
+                returnDateInput.value = calculated;
+            } else {
+                returnDateInput.value = "";
+            }
         }
 
         function addLeave(event) {
@@ -473,6 +493,7 @@
             document.getElementById('leaveForm').reset();
             document.getElementById('rank').value = '';
             document.getElementById('name').value = '';
+            document.getElementById('calculated_return_date').value = '';
             renderTables();
         }
 
@@ -493,7 +514,6 @@
             const activeCount = document.getElementById('active_count');
             const searchQuery = document.getElementById('global_search').value.toLowerCase();
 
-            // फिल्टरिङ र सर्च लजिक
             let activeList = leavesData.filter(item => item.status === 'Active');
             if (searchQuery) {
                 activeList = activeList.filter(item => 
@@ -505,8 +525,6 @@
             }
 
             const returnedList = leavesData.filter(item => item.status === 'Returned');
-
-            // कुल हाल बिदामा रहेका वास्तविक कर्मचारी संख्या देखाउन
             const totalActiveCount = leavesData.filter(item => item.status === 'Active').length;
             activeCount.innerText = totalActiveCount;
 
@@ -564,7 +582,6 @@
             }
         }
 
-        // पेज लोड हुँदा टेबल अपडेट गर्ने
         window.onload = renderTables;
     </script>
 </body>
