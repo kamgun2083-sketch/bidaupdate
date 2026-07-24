@@ -203,27 +203,24 @@
                     <span>हाल बिदामा रहेका प्रहरी कर्मचारीहरूको नामावली (<span id="active_count" style="color: #d9534f;">0</span> जना)</span>
                     <button class="print-btn" onclick="window.print()">प्रिन्ट गर्नुहोस्</button>
                 </h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>कम्प्युटर कोड</th>
-                            <th>दर्जा</th>
-                            <th>नाम थर</th>
-                            <th>बिदाको किसिम</th>
-                            <th>सुरु मिति (वि.सं.)</th>
-                            <th>समाप्ति विवरण</th>
-                            <th>दिन</th>
-                            <th>हाजिर हुने मिति</th> <!-- नयाँ थपिएको -->
-                             <th>कैफियत</th>         <!-- नयाँ थपिएको -->
-                            <th class="action-col">हाजिर भएको (Mark Present)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="active_leaves_body">
-                        <tr>
-                            <td colspan="8">हाल कोही पनि बिदामा छैनन्।</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <table id="onLeaveTable">
+  <thead>
+    <tr>
+      <th>कम्प्युटर कोड</th>
+      <th>दर्जा</th>
+      <th>नाम थर</th>
+      <th>बिदाको किसिम</th>
+      <th>सुरु मिति (वि.सं.)</th>
+      <th>हाजिर हुने मिति</th> <!-- 'समाप्ति विवरण' को ठाउँमा -->
+      <th>दिन</th>
+      <th>कैफियत</th>         <!-- नयाँ म्यानुअल कैफियत बक्स -->
+      <th>हाजिर भएको (Mark Present)</th>
+    </tr>
+  </thead>
+  <tbody id="onLeaveTableBody">
+    <!-- डाटा यहाँ लोड हुन्छ -->
+  </tbody>
+</table>
             </div>
 
             <!-- बिदाबाट हाजिर भई फर्केका प्रहरी कर्मचारीहरूको सूची -->
