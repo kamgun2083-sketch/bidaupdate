@@ -327,9 +327,8 @@
     </footer>
 
     <script>
-        // ** यहाँ तपाईंले चरण १ मा पाएको Google Apps Script को Web App URL राख्नुहोला **
-     const SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE"; 
-// यहाँ "https://script.google.com/macros/s/AKfycbxglfVnEq7qJMhjyjuVMwkBpu8JabxSGxN57OWvMgiG_vzdUPipRh03caR3QOnrJO8/exec" भित्र आफ्नो वेब एपको URL राख्ने
+        // गुगल एप्स स्क्रिप्टको वेब एप युआरएल
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxglfVnEq7qJMhjyjuVMwkBpu8JabxSGxN57OWvMgiG_vzdUPipRh03caR3QOnrJO8/exec"; 
 
         const employeeDatabase = {
             "33223": { rank: "प्रउ", name: "तिलक भारती" },
@@ -448,7 +447,7 @@
                 })
                 .catch(error => {
                     console.error('Error loading data:', error);
-                    alert('गुगल शिटबाट डाटा लोड गर्न समस्या भयो!');
+                    // गुगल शिटबाट डाटा लोड हुन समस्या भएमा प्रयोगकर्तालाई सूचना दिने
                 });
         }
 
@@ -543,8 +542,8 @@
                 document.getElementById('submit_btn').disabled = false;
                 document.getElementById('loading-indicator').style.display = 'none';
                 
-                // फेरि डाटा लोड गर्ने
-                setTimeout(loadDataFromSheet, 1500);
+                // गुगल शिटमा डाटा सेभ भएपछि पुन: डाटा लोड गर्ने
+                setTimeout(loadDataFromSheet, 2000);
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -577,7 +576,7 @@
                     body: JSON.stringify({ action: 'updateStatus', id: selectedLeaveId, remarks: remarks || 'समयमै हाजिर भएको' })
                 })
                 .then(() => {
-                    setTimeout(loadDataFromSheet, 1500);
+                    setTimeout(loadDataFromSheet, 2000);
                 })
                 .catch(error => {
                     console.error('Error:', error);
