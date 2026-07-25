@@ -704,7 +704,7 @@
             }
         }
 
-       function calculateReturnDate(startDate, totalDays, publicHolidays) {
+      function calculateReturnDate(startDate, totalDays, publicHolidays) {
     let cleanDate = startDate.replace(/-/g, '/');
     let parts = cleanDate.split('/');
     
@@ -731,7 +731,8 @@
     }
     return "";
 }
-    
+
+ 
 
        function autoCalculateReturnDate() {
     const startDate = document.getElementById('start_date').value;
