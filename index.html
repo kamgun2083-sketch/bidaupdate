@@ -664,17 +664,17 @@
         let selectedLeaveId = null;
 
         function handleLogin(event) {
-            event.preventDefault();
-            const user = document.getElementById('login_user').value;
-            const pass = document.getElementById('login_pass').value;
-            
-            if (user === "admin" && pass === "gun1234") {
-                document.getElementById('login-overlay').style.display = 'none';
-                loadDataFromSheet();
-            } else {
-                document.getElementById('login_error').style.display = 'block';
-            }
-        }
+    event.preventDefault();
+    const user = document.getElementById('login_user').value;
+    const pass = document.getElementById('login_pass').value;
+
+    if (user === "admin" && pass === "gun1234") {
+        document.getElementById('login-overlay').style.display = 'none';
+        loadDataFromSheet();
+    } else {
+        document.getElementById('login_error').style.display = 'block';
+    }
+}
 
         function loadDataFromSheet() {
             fetch(SCRIPT_URL)
