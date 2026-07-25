@@ -759,19 +759,19 @@
         function saveLeaveRecord(event) {
     event.preventDefault(); // पेजलाई अचानक रिफ्रेस हुनबाट बचाउँछ
 
-    // १. मिति र दिनहरूको हिसाब गर्ने (तपाईंको पुरानो लजिक यहाँ राखिएको छ)
+    // १. इनपुटबाट मानहरू लिने
     const startDate = document.getElementById('start_date').value;
     const totalDays = parseInt(document.getElementById('total_days').value) || 0;
     const publicHolidays = parseInt(document.getElementById('public_holidays').value) || 0;
 
-    // हाजिर हुने सही मिति निकाल्ने
+    // २. तपाईंको आफ्नै calculateReturnDate फंक्सन प्रयोगして सही हाजिर हुने मिति निकाल्ने
     const returnDate = calculateReturnDate(startDate, totalDays, publicHolidays);
 
-    // २. लोडिङ मेसेज देखाउने र बटन बन्द (disable) गर्ने
+    // ३. लोडिङ मेसेज देखाउने र बटन बन्द (disable) गर्ने
     document.getElementById('submit_btn').disabled = true;
     document.getElementById('loading-indicator').style.display = 'block';
 
-    // ३. फारमका सबै डाटा तयार पार्ने (returnDate सहित)
+    // ४. फारमका सबै डाटा तयार पार्ने
     const formData = {
         computerCode: document.getElementById('computer_code').value,
         rank: document.getElementById('rank') ? document.getElementById('rank').value : '',
@@ -783,7 +783,7 @@
         endDate: returnDate // गणना गरिएको सही हाजिर हुने मिति
     };
 
-    // ४. Google Apps Script मा डाटा पठाउने
+    // ५. Google Apps Script मा डाटा पठाउने
     fetch(SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify(formData)
@@ -793,13 +793,13 @@
         console.log('Data sent successfully');
     });
 
-    // ५. ३ सेकेन्ड पछि लोडिङ हटाउने र पेज रिफ्रेस गर्ने
+    // ६. ३ सेकेन्ड पछि लोडिङ हटाउने, मेसेज देखाउने र पेज रिफ्रेस गर्ने
     setTimeout(() => {
         document.getElementById('submit_btn').disabled = false;
         document.getElementById('loading-indicator').style.display = 'none';
         alert('बिदा रेकर्ड सफलतापूर्वक सुरक्षित भयो!');
         
-        location.reload(); // पेज रिफ्रेस भएर टेबलमा डाटा देखाउँछ
+        location.reload(); // पेज रिफ्रेस भएर हाल बिदामा रहेका कर्मचारीको सूचीमा डेटा देखाउँछ
     }, 3000);
 }
 
