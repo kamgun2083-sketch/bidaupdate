@@ -739,37 +739,22 @@
     return "";
 }
 
- 
+ function saveLeaveRecord(event) {
+    event.preventDefault(); // पेज अचानक रिफ्रेस हुनबाट बचाउने
 
-       function autoCalculateReturnDate() {
-    const startDate = document.getElementById('start_date').value;
-    const totalDays = parseInt(document.getElementById('total_days').value) || 0;
-    const publicHolidays = parseInt(document.getElementById('public_holidays').value) || 0;
-    
-    // सहि हाजिर हुने मिति झिकेर डिस्प्ले/इन्पुटमा देखाउने
-    const returnDate = calculateReturnDate(startDate, totalDays, publicHolidays);
-    
-    const returnDateInput = document.getElementById('calculated_return_date');
-    if (returnDateInput) {
-        returnDateInput.value = returnDate;
-    }
-}
-        function saveLeaveRecord(event) {
-    event.preventDefault(); // पेजलाई अचानक रिफ्रेस हुनबाट बचाउँछ
-
-    // १. इनपुटबाट मानहरू लिने
+    // १. इनपुटहरूबाट मानहरू लिने
     const startDate = document.getElementById('start_date').value;
     const totalDays = parseInt(document.getElementById('total_days').value) || 0;
     const publicHolidays = parseInt(document.getElementById('public_holidays').value) || 0;
 
-    // २. तपाईंको आफ्नै calculateReturnDate फंक्सन प्रयोगして सही हाजिर हुने मिति निकाल्ने
+    // हाजिर हुने सहि मिति निकाल्ने
     const returnDate = calculateReturnDate(startDate, totalDays, publicHolidays);
 
-    // ३. लोडिङ मेसेज देखाउने र बटन बन्द (disable) गर्ने
+    // २. लोडिङ मेसेज देखाउने र बटन बन्द (disable) गर्ने
     document.getElementById('submit_btn').disabled = true;
     document.getElementById('loading-indicator').style.display = 'block';
 
-    // ४. फारमका सबै डाटा तयार पार्ने
+    // ३. पठाउने डाटा तयार पार्ने
     const formData = {
         computerCode: document.getElementById('computer_code').value,
         rank: document.getElementById('rank') ? document.getElementById('rank').value : '',
@@ -778,29 +763,36 @@
         startDate: startDate,
         totalDays: totalDays,
         publicHolidays: publicHolidays,
-        endDate: returnDate // गणना गरिएको सही हाजिर हुने मिति
+        endDate: returnDate
     };
 
-    // ५. Google Apps Script मा डाटा पठाउने
+    // ४. Google Apps Script मा डाटा पठाउने (वास्तविक ट्रान्सफर)
     fetch(SCRIPT_URL, {
         method: 'POST',
+        mode: 'no-cors', // गुगल स्प्रिेडसिटसँग कनेक्सनका लागि यो आवश्यक हुन्छ
+        headers: {
+            'Content-Type': 'text/plain;charset=utf-8',
+        },
         body: JSON.stringify(formData)
     })
-    .then(response => response.json())
-    .catch(() => {
-        console.log('Data sent successfully');
-    });
-
-    // ६. ३ सेकेन्ड पछि लोडिङ हटाउने, मेसेज देखाउने र पेज रिफ्रेस गर्ने
-    setTimeout(() => {
+    .then(() => {
+        // ५. डाटा सफलतापूर्वक गएपछि मात्र यो भाग चल्छ
         document.getElementById('submit_btn').disabled = false;
         document.getElementById('loading-indicator').style.display = 'none';
-        alert('बिदा रेकर्ड सफलतापूर्वक सुरक्षित भयो!');
         
-        location.reload(); // पेज रिफ्रेस भएर हाल बिदामा रहेका कर्मचारीको सूचीमा डेटा देखाउँछ
-    }, 3000);
+        alert('बिदा रेकर्ड सफलतापूर्वक सुरक्षित भयो!');
+        location.reload(); // पेज रिफ्रेस भएर टेबलमा डाटा देखाउँछ
+    })
+    .catch(error => {
+        // यदि कुनै समस्या आएमा
+        console.error('Error!', error);
+        alert('डाटा सेभ गर्न समस्या भयो, कृपया फेरि प्रयास गर्नुहोस्।');
+        document.getElementById('submit_btn').disabled = false;
+        document.getElementById('loading-indicator').style.display = 'none';
+    });
 }
 
+      
     const newLeave = {
         id: Date.now(),
         code: document.getElementById('computer_code').value,
