@@ -790,20 +790,20 @@
                 document.getElementById('loading-indicator').style.display = 'none';
                 
                 setTimeout(loadDataFromSheet, 2000);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('डाटा सेभ गर्न असफल भयो!');
-                document.getElementById('submit_btn').disabled = false;
-                document.getElementById('loading-indicator').style.display = 'none';
-            });
-        }
+          })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('डाटा सेभ गर्न असफल भयो!');
+        document.getElementById('submit_btn').disabled = false;
+        document.getElementById('loading-indicator').style.display = 'none';
+    }); // यो भागले .catch र fetch लाई बन्द गर्छ
+}       // यो भागले पूरै फंक्सनलाई बन्द गर्छ (जस्तै addLeave फंक्सन)
 
-        function openModal(id) {
-            selectedLeaveId = id;
-            document.getElementById('modal_remarks').value = '';
-            document.getElementById('modal-overlay').style.display = 'flex';
-        }
+function openModal(id) {
+    selectedLeaveId = id;
+    document.getElementById('modal_remarks').value = '';
+    document.getElementById('modal-overlay').style.display = 'flex';
+}
 
         function closeModal() {
             document.getElementById('modal-overlay').style.display = 'none';
