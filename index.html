@@ -704,19 +704,20 @@
             }
         }
 
-        function calculateReturnDate(startDate, totalDays) {
+       function calculateReturnDate(startDate, totalDays, publicHolidays) {
     let cleanDate = startDate.replace(/-/g, '/');
     let parts = cleanDate.split('/');
     
     if (parts.length === 3) {
         let year = parseInt(parts[0]);
         let month = parseInt(parts[1]);
-        let daysToAdd = parseInt(totalDays);
         
-        if (isNaN(year) || isNaN(month) || isNaN(daysToAdd)) return "";
+        // मुख्य बिदा र सार्वजनिक बिदा दुवै जोडेर जम्मा दिन निकाल्ने
+        let totalLeaveDays = parseInt(totalDays) + parseInt(publicHolidays);
+        
+        if (isNaN(year) || isNaN(month) || isNaN(totalLeaveDays)) return "";
 
-        // यहाँ बिदाको दिनमा १ घटाएर हिसाब गरिन्छ, ताकि हाजिर हुने मिति सही (भोलिपल्ट) आ minor होस्
-        let day = parseInt(parts[2]) + daysToAdd - 1;
+        let day = parseInt(parts[2]) + totalLeaveDays;
         
         while (day > 30) {
             day -= 30;
@@ -735,49 +736,39 @@
        function autoCalculateReturnDate() {
     const startDate = document.getElementById('start_date').value;
     const totalDays = parseInt(document.getElementById('total_days').value) || 0;
-    
-    // सार्वजनिक बिदाको संख्या लिने (खाली भएमा वा नभएमा ० मान्ने)
     const publicHolidays = parseInt(document.getElementById('public_holidays').value) || 0;
     
+    // सहि हाजिर हुने मिति झिकेर डिस्प्ले/इन्पुटमा देखाउने
+    const returnDate = calculateReturnDate(startDate, totalDays, publicHolidays);
+    
     const returnDateInput = document.getElementById('calculated_return_date');
-
-    if (startDate && !isNaN(totalDays)) {
-        // बिदा बसेको दिन र सार्वजनिक बिदा जोडेर कुल दिन निकाल्ने
-        let grandTotalDays = totalDays + publicHolidays;
-        
-        // क्याल्कुलेसन फंक्सनमा कुल दिन पठाउने
-        let calculated = calculateReturnDate(startDate, grandTotalDays);
-        returnDateInput.value = calculated;
-    } else {
-        returnDateInput.value = "";
+    if (returnDateInput) {
+        returnDateInput.value = returnDate;
     }
 }
-
         function addLeave(event) {
-            event.preventDefault();
-            const startDate = document.getElementById('start_date').value;
-const totalDays = parseInt(document.getElementById('total_days').value) || 0;
+    event.preventDefault();
+    const startDate = document.getElementById('start_date').value;
+    const totalDays = parseInt(document.getElementById('total_days').value) || 0;
+    
+    // सार्वजनिक बिदाको संख्या लिने
+    const publicHolidays = parseInt(document.getElementById('public_holidays').value) || 0;
 
-// नयाँ थपिएको लाइन: सार्वजनिक बिदाको संख्या लिने
-const publicHolidays = parseInt(document.getElementById('public_holidays').value) || 0;
+    // हाजिर हुने मिति निकाल्दा मुख्य बिदा र सार्वजनिक बिदा दुवै जोडेर पठाउने (जसले भोलिको सहि मिति दिन्छ)
+    const returnDate = calculateReturnDate(startDate, totalDays, publicHolidays);
 
-// दुवै दिनलाई जोडेर कुल दिन निकाल्ने
-const grandTotalDays = totalDays + publicHolidays;
-
-// क्याल्कुलेसन गर्दा अब पुरानो totalDays को सट्टा 'grandTotalDays' पठाउने
-const returnDate = calculateReturnDate(startDate, grandTotalDays);
-
-            const newLeave = {
-                id: Date.now(),
-                code: document.getElementById('computer_code').value,
-                rank: document.getElementById('rank').value,
-                name: document.getElementById('name').value,
-                type: document.getElementById('leave_type').value,
-                startDate: startDate,
-                days: grandTotalDays, // यहाँ कुल दिन (बिदा + सार्वजनिक बिदा) जानुपर्छ
-                returnDate: returnDate,
-                remarks: '',
-                status: 'Active'
+    const newLeave = {
+        id: Date.now(),
+        code: document.getElementById('computer_code').value,
+        rank: document.getElementById('rank').value,
+        name: document.getElementById('name').value,
+        type: document.getElementById('leave_type').value,
+        startDate: startDate,    // सुरुको मिति आजकै बस्छ
+        days: totalDays,         // टेबलमा थपिएको सार्वजनिक बिदा नदेखिई केवल मुख्य दिन मात्र बस्छ
+        returnDate: returnDate,  // हाजिर हुने मिति (भोलिको सहि मिति) आउँछ
+        remarks: '',
+        status: 'Active'
+    };
             };
 
             document.getElementById('submit_btn').disabled = true;
