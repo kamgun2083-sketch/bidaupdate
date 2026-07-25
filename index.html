@@ -375,7 +375,7 @@
             }
         }
 
-        // मिति सही हिसाबले गणना गर्ने फिक्स गरिएको फंक्सन
+        // यहाँ १ दिन बिदा बस्दा भोलिपल्ट आउने गरी (सुरु मिति + दिन + सार्वजनिक बिदा) हिसाब मिलाइएको छ
         function calculateReturnDate(startDate, totalDays, publicHolidays) {
             let cleanDate = startDate.replace(/-/g, '/');
             let parts = cleanDate.split('/');
@@ -390,12 +390,8 @@
                 
                 if (isNaN(year) || isNaN(month) || isNaN(startDay) || isNaN(daysNum)) return "";
 
-                // सहि हाजिर हुने मिति निकाल्न: सुरु मिति + जम्मा दिन + सार्वजनिक बिदा
-                let totalLeaveSpan = (daysNum + pubNum);
-                if (totalLeaveSpan > 0) {
-                    totalLeaveSpan -= 1; // सुरुको दिन गणना गरेर सहि फिर्ती दिन मिलाउने
-                }
-
+                // जम्मा दिन र सार्वजनिक बिदा सिधै जोड्दा (जस्तै: १५ गते + १ दिन = १६ गते भोलिपल्ट) हाजिर हुने मिति आउँछ
+                let totalLeaveSpan = daysNum + pubNum;
                 let day = startDay + totalLeaveSpan;
                 
                 while (day > 30) {
