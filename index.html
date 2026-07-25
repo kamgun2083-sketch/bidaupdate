@@ -375,7 +375,6 @@
             }
         }
 
-        // सही मिति गणना गर्ने परिमार्जित फंक्सन
         function calculateReturnDate(startDate, totalDays, publicHolidays) {
             let cleanDate = startDate.replace(/-/g, '/');
             let parts = cleanDate.split('/');
@@ -464,7 +463,7 @@
                 document.getElementById('submit_btn').disabled = false;
                 document.getElementById('loading-indicator').style.display = 'none';
                 
-                alert('बिदा रेकर्ड सफलतापूर्वक सुरक्षित भयो!');
+                // alert हटाइएको छ ताकि म्यासेज नआइकन डाटा सेभ होस्
                 setTimeout(loadDataFromSheet, 1500);
             })
             .catch(error => {
@@ -507,15 +506,12 @@
             }
         }
 
-        // मितिलाई कुनै पनि फेरबदल नगरिकन हुबहु स्ट्रिङको रूपमा देखाउने सच्याइएको फंक्सन
         function formatDate(dateStr) {
             if (!dateStr) return '-';
             let str = String(dateStr).trim();
-            // यदि गुगल शीटबाट आउँदा पछाडि समय वा 'T' जोडिएर आएको छ भने त्यसलाई मात्र हटाउने, नत्र हुबहु राख्ने
             if (str.includes('T')) {
                 str = str.split('T')[0];
             }
-            // यदि हाइफन (-) आएको छ भने त्यसलाई स्ल्याश (/) मा बदल्ने ताकी ढाँचा एकैनास होस्
             return str.replace(/-/g, '/');
         }
 
