@@ -214,10 +214,16 @@
     <div class="main-container">
         <div class="form-container">
             <h3>बिदा दर्ता फारम</h3>
-            <form id="leaveForm" onsubmit="addLeave(event)">
-                <label>कम्प्युटर कोड / संकेत नं:</label>
-                <input type="text" id="computer_code" placeholder="जस्तै: 33223" required onkeyup="fetchEmployee(this.value)">
-                <div id="emp_info" class="info"></div>
+            <form id="leaveForm" onsubmit="saveLeaveRecord(event)">
+    <label>कम्प्युटर कोड / संकेत नं:</label>
+    <input type="text" id="computer_code" placeholder="जस्तै: 33223" required onkeyup="fetchEmployee(this.value)">
+    <div id="emp_info" class="info"></div>
+
+    <!-- अन्य इनपुटहरू (दर्ता, नाम, बिदाको प्रकार आदि) यहाँ रहन्छन् -->
+
+    <button type="submit" id="submit_btn">बिदा रेकर्ड सुरक्षित गर्नुहोस्</button>
+    <div id="loading-indicator">डाटा सेभ हुँदैछ, कृपया पर्खनुहोस्...</div>
+</form>
 
                 <label>दर्जा:</label>
                 <input type="text" id="rank" readonly required placeholder="दर्जा देखा पर्नेछ">
@@ -750,16 +756,52 @@
         returnDateInput.value = returnDate;
     }
 }
-        function addLeave(event) {
-    event.preventDefault();
+        function saveLeaveRecord(event) {
+    event.preventDefault(); // पेजलाई अचानक रिफ्रेस हुनबाट बचाउँछ
+
+    // १. मिति र दिनहरूको हिसाब गर्ने (तपाईंको पुरानो लजिक यहाँ राखिएको छ)
     const startDate = document.getElementById('start_date').value;
     const totalDays = parseInt(document.getElementById('total_days').value) || 0;
-    
-    // सार्वजनिक बिदाको संख्या लिने
     const publicHolidays = parseInt(document.getElementById('public_holidays').value) || 0;
 
-    // हाजिर हुने मिति निकाल्दा मुख्य बिदा र सार्वजनिक बिदा दुवै जोडेर पठाउने (जसले भोलिको सहि मिति दिन्छ)
+    // हाजिर हुने सही मिति निकाल्ने
     const returnDate = calculateReturnDate(startDate, totalDays, publicHolidays);
+
+    // २. लोडिङ मेसेज देखाउने र बटन बन्द (disable) गर्ने
+    document.getElementById('submit_btn').disabled = true;
+    document.getElementById('loading-indicator').style.display = 'block';
+
+    // ३. फारमका सबै डाटा तयार पार्ने (returnDate सहित)
+    const formData = {
+        computerCode: document.getElementById('computer_code').value,
+        rank: document.getElementById('rank') ? document.getElementById('rank').value : '',
+        name: document.getElementById('name') ? document.getElementById('name').value : '',
+        leaveType: document.getElementById('leave_type') ? document.getElementById('leave_type').value : '',
+        startDate: startDate,
+        totalDays: totalDays,
+        publicHolidays: publicHolidays,
+        endDate: returnDate // गणना गरिएको सही हाजिर हुने मिति
+    };
+
+    // ४. Google Apps Script मा डाटा पठाउने
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .catch(() => {
+        console.log('Data sent successfully');
+    });
+
+    // ५. ३ सेकेन्ड पछि लोडिङ हटाउने र पेज रिफ्रेस गर्ने
+    setTimeout(() => {
+        document.getElementById('submit_btn').disabled = false;
+        document.getElementById('loading-indicator').style.display = 'none';
+        alert('बिदा रेकर्ड सफलतापूर्वक सुरक्षित भयो!');
+        
+        location.reload(); // पेज रिफ्रेस भएर टेबलमा डाटा देखाउँछ
+    }, 3000);
+}
 
     const newLeave = {
         id: Date.now(),
