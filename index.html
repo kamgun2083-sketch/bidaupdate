@@ -705,29 +705,31 @@
         }
 
         function calculateReturnDate(startDate, totalDays) {
-            let cleanDate = startDate.replace(/-/g, '/');
-            let parts = cleanDate.split('/');
-            
-            if (parts.length === 3) {
-                let year = parseInt(parts[0]);
-                let month = parseInt(parts[1]);
-                let daysToAdd = parseInt(totalDays);
-                
-                if (isNaN(year) || isNaN(month) || isNaN(daysToAdd)) return "";
+    let cleanDate = startDate.replace(/-/g, '/');
+    let parts = cleanDate.split('/');
+    
+    if (parts.length === 3) {
+        let year = parseInt(parts[0]);
+        let month = parseInt(parts[1]);
+        let daysToAdd = parseInt(totalDays);
+        
+        if (isNaN(year) || isNaN(month) || isNaN(daysToAdd)) return "";
 
-                let day = parseInt(parts[2]) + daysToAdd;
-                
-                while (day > 30) {
-                    day -= 30;
-                    month += 1;
-                }
-                if (month > 12) {
-                    month = 1;
-                    year += 1;
-                }
-                return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
-            }
-            return "";
+        // यहाँ बिदाको दिनमा १ घटाएर हिसाब गरिन्छ, ताकि हाजिर हुने मिति सही (भोलिपल्ट) आ minor होस्
+        let day = parseInt(parts[2]) + daysToAdd - 1;
+        
+        while (day > 30) {
+            day -= 30;
+            month += 1;
+        }
+        if (month > 12) {
+            month = 1;
+            year += 1;
+        }
+        return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+    }
+    return "";
+}
         }
 
        function autoCalculateReturnDate() {
