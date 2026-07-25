@@ -375,7 +375,7 @@
             }
         }
 
-        // सुरु मितिमा जुन राखिन्छ सोही मिति आउने र हाजिर हुने मिति भोलिपल्ट (अर्थात् कुल दिन + १ दिन) देखाउने फंक्सन
+        // सही मिति गणना गर्ने परिमार्जित फंक्सन
         function calculateReturnDate(startDate, totalDays, publicHolidays) {
             let cleanDate = startDate.replace(/-/g, '/');
             let parts = cleanDate.split('/');
@@ -390,19 +390,31 @@
                 
                 if (isNaN(year) || isNaN(month) || isNaN(startDay) || isNaN(daysNum)) return "";
 
-                // जम्मा बिदा अवधिमा १ दिन थप गरेर भोलिपल्टको मिति निकालिएको छ
+                // जम्मा बिदा अवधिमा १ दिन थप गरेर भोलिपल्टको मिति निकाल्ने
                 let totalLeaveSpan = daysNum + pubNum;
-                let day = startDay + totalLeaveSpan; 
+                let targetDay = startDay + totalLeaveSpan; 
                 
-                while (day > 30) {
-                    day -= 30;
+                // नेपाली महिनाहरू सामान्यतया ३० वा ३१ दिनका हुन्छन्, यहाँ ३० दिनको क्यालेन्डर चक्र अनुसार मिलाइएको छ
+                while (targetDay > 30) {
+                    targetDay -= 30;
                     month += 1;
                 }
+                
+                // यदि दिन ० वा त्यसभन्दा कम आएमा (महिना घट्नु पर्ने अवस्थामा)
+                while (targetDay <= 0) {
+                    targetDay += 30;
+                    month -= 1;
+                }
+
                 if (month > 12) {
                     month = 1;
                     year += 1;
+                } else if (month < 1) {
+                    month = 12;
+                    year -= 1;
                 }
-                return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+
+                return `${year}/${String(month).padStart(2, '0')}/${String(targetDay).padStart(2, '0')}`;
             }
             return "";
         }
