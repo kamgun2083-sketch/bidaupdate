@@ -375,6 +375,7 @@
             }
         }
 
+        // मिति सही हिसाबले गणना गर्ने फिक्स गरिएको फंक्सन
         function calculateReturnDate(startDate, totalDays, publicHolidays) {
             let cleanDate = startDate.replace(/-/g, '/');
             let parts = cleanDate.split('/');
@@ -382,11 +383,20 @@
             if (parts.length === 3) {
                 let year = parseInt(parts[0]);
                 let month = parseInt(parts[1]);
-                let totalLeaveDays = parseInt(totalDays) + parseInt(publicHolidays);
+                let startDay = parseInt(parts[2]);
                 
-                if (isNaN(year) || isNaN(month) || isNaN(totalLeaveDays)) return "";
+                let daysNum = parseInt(totalDays) || 0;
+                let pubNum = parseInt(publicHolidays) || 0;
+                
+                if (isNaN(year) || isNaN(month) || isNaN(startDay) || isNaN(daysNum)) return "";
 
-                let day = parseInt(parts[2]) + totalLeaveDays;
+                // सहि हाजिर हुने मिति निकाल्न: सुरु मिति + जम्मा दिन + सार्वजनिक बिदा
+                let totalLeaveSpan = (daysNum + pubNum);
+                if (totalLeaveSpan > 0) {
+                    totalLeaveSpan -= 1; // सुरुको दिन गणना गरेर सहि फिर्ती दिन मिलाउने
+                }
+
+                let day = startDay + totalLeaveSpan;
                 
                 while (day > 30) {
                     day -= 30;
