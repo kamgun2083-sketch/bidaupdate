@@ -221,10 +221,7 @@
 
     <!-- अन्य इनपुटहरू (दर्ता, नाम, बिदाको प्रकार आदि) यहाँ रहन्छन् -->
 
-    <button type="submit" id="submit_btn">बिदा रेकर्ड सुरक्षित गर्नुहोस्</button>
-    <div id="loading-indicator">डाटा सेभ हुँदैछ, कृपया पर्खनुहोस्...</div>
-</form>
-
+    
                 <label>दर्जा:</label>
                 <input type="text" id="rank" readonly required placeholder="दर्जा देखा पर्नेछ">
 
@@ -253,9 +250,10 @@
                 <label style="color: #28a745;">हाजिर हुने मिति (स्वतः गणना):</label>
                 <input type="text" id="calculated_return_date" readonly style="background-color: #e9ecef; font-weight: bold; color: #28a745;" placeholder="मिति गणना हुनेछ">
 
-                <button type="submit" id="submit_btn">बिदा रेकर्ड सुरक्षित गर्नुहोस्</button>
-                <div id="loading-indicator">डाटा सेभ हुँदैछ, कृपया पर्खनुहोस्...</div>
-            </form>
+                <!-- अन्य इनपुटहरू पछि फारमको अन्त्यमा रहने एकमात्र बटन र लोडिङ इन्डिकेटर -->
+    <button type="submit" id="submit_btn" class="btn">बिदा रेकर्ड सुरक्षित गर्नुहोस्</button>
+    <div id="loading-indicator" style="display:none; color:red; margin-top:5px;">डाटा सेभ हुँदैछ, कृपया पर्खनुहोस्...</div>
+</form>
         </div>
 
         <div class="right-container">
