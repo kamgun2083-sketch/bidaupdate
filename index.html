@@ -239,7 +239,7 @@
                 <input type="number" id="total_days" placeholder="बिदा बसेको दिन" required oninput="autoCalculateReturnDate()">
 
                 <label>सार्वजनिक बिदा (Public Holidays):</label>
-                <input type="number" id="public_holidays" value="0">
+<input type="number" id="public_holidays" value="0" oninput="autoCalculateReturnDate()">
 
                 <label style="color: #28a745;">हाजिर हुने मिति (स्वतः गणना):</label>
                 <input type="text" id="calculated_return_date" readonly style="background-color: #e9ecef; font-weight: bold; color: #28a745;" placeholder="मिति गणना हुनेछ">
@@ -730,18 +730,26 @@
             return "";
         }
 
-        function autoCalculateReturnDate() {
-            const startDate = document.getElementById('start_date').value;
-            const totalDays = document.getElementById('total_days').value;
-            const returnDateInput = document.getElementById('calculated_return_date');
+       function autoCalculateReturnDate() {
+    const startDate = document.getElementById('start_date').value;
+    const totalDays = parseInt(document.getElementById('total_days').value) || 0;
+    
+    // सार्वजनिक बिदाको संख्या लिने (खाली भएमा वा नभएमा ० मान्ने)
+    const publicHolidays = parseInt(document.getElementById('public_holidays').value) || 0;
+    
+    const returnDateInput = document.getElementById('calculated_return_date');
 
-            if (startDate && totalDays) {
-                let calculated = calculateReturnDate(startDate, totalDays);
-                returnDateInput.value = calculated;
-            } else {
-                returnDateInput.value = "";
-            }
-        }
+    if (startDate && !isNaN(totalDays)) {
+        // बिदा बसेको दिन र सार्वजनिक बिदा जोडेर कुल दिन निकाल्ने
+        let grandTotalDays = totalDays + publicHolidays;
+        
+        // क्याल्कुलेसन फंक्सनमा कुल दिन पठाउने
+        let calculated = calculateReturnDate(startDate, grandTotalDays);
+        returnDateInput.value = calculated;
+    } else {
+        returnDateInput.value = "";
+    }
+}
 
         function addLeave(event) {
             event.preventDefault();
