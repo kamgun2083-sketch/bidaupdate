@@ -797,7 +797,7 @@
         document.getElementById('submit_btn').disabled = false;
         document.getElementById('loading-indicator').style.display = 'none';
 }); 
-}       
+       
 
 
 function openModal(id) {
@@ -806,31 +806,37 @@ function openModal(id) {
     document.getElementById('modal-overlay').style.display = 'flex';
 }
 
-        function closeModal() {
-            document.getElementById('modal-overlay').style.display = 'none';
-            selectedLeaveId = null;
-        }
+        function openModal(id) {
+    selectedLeaveId = id;
+    document.getElementById('modal_remarks').value = '';
+    document.getElementById('modal-overlay').style.display = 'flex';
+}
 
-        function confirmMarkPresent() {
-            const remarks = document.getElementById('modal_remarks').value;
-            if (selectedLeaveId !== null) {
-                document.getElementById('modal-overlay').style.display = 'none';
+function closeModal() {
+    document.getElementById('modal-overlay').style.display = 'none';
+    selectedLeaveId = null;
+}
 
-                fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({ action: 'updateStatus', id: selectedLeaveId, remarks: remarks || 'समयमै हाजिर भएको' })
-                })
-                .then(() => {
-                    setTimeout(loadDataFromSheet, 2000);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('स्थिति अपडेट गर्न असफल भयो!');
-                });
-            }
-        }
+function confirmMarkPresent() {
+    const remarks = document.getElementById('modal_remarks').value;
+    if (selectedLeaveId !== null) {
+        document.getElementById('modal-overlay').style.display = 'none';
+
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ action: 'updateStatus', id: selectedLeaveId, remarks: remarks || 'समयमै हाजिर भएको' })
+        })
+        .then(() => {
+            setTimeout(loadDataFromSheet, 2000);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('स्थिति अपडेट गर्न असफल भयो!');
+        });
+    }
+}
 
         // फिक्स गरिएको मिति देखाउने फंक्सन (ISO format र समय हटाएर केवल मिति मात्र देखाउने)
         function formatDate(dateStr) {
