@@ -233,7 +233,7 @@
                 </select>
 
                 <label>सुरु गर्ने मिति (वि.सं.):</label>
-                <input type="text" id="start_date" placeholder="२०८३/०३/१५" required oninput="autoCalculateReturnDate()">
+                <input type="text" id="start_date" placeholder="२०८३/०४/०९" required oninput="autoCalculateReturnDate()">
 
                 <label>जम्मा दिन:</label>
                 <input type="number" id="total_days" placeholder="बिदा बसेको दिन" required oninput="autoCalculateReturnDate()">
@@ -390,17 +390,14 @@
                 
                 if (isNaN(year) || isNaN(month) || isNaN(startDay) || isNaN(daysNum)) return "";
 
-                // जम्मा बिदा अवधिमा १ दिन थप गरेर भोलिपल्टको मिति निकाल्ने
                 let totalLeaveSpan = daysNum + pubNum;
                 let targetDay = startDay + totalLeaveSpan; 
                 
-                // नेपाली महिनाहरू सामान्यतया ३० वा ३१ दिनका हुन्छन्, यहाँ ३० दिनको क्यालेन्डर चक्र अनुसार मिलाइएको छ
                 while (targetDay > 30) {
                     targetDay -= 30;
                     month += 1;
                 }
                 
-                // यदि दिन ० वा त्यसभन्दा कम आएमा (महिना घट्नु पर्ने अवस्थामा)
                 while (targetDay <= 0) {
                     targetDay += 30;
                     month -= 1;
@@ -431,7 +428,7 @@
         function saveLeaveRecord(event) {
             event.preventDefault(); 
 
-            const startDate = document.getElementById('start_date').value;
+            const startDate = document.getElementById('start_date').value.trim();
             const totalDays = parseInt(document.getElementById('total_days').value) || 0;
             const publicHolidays = parseInt(document.getElementById('public_holidays').value) || 0;
             const returnDate = calculateReturnDate(startDate, totalDays, publicHolidays);
@@ -510,13 +507,16 @@
             }
         }
 
+        // मितिलाई कुनै पनि फेरबदल नगरिकन हुबहु स्ट्रिङको रूपमा देखाउने सच्याइएको फंक्सन
         function formatDate(dateStr) {
             if (!dateStr) return '-';
             let str = String(dateStr).trim();
+            // यदि गुगल शीटबाट आउँदा पछाडि समय वा 'T' जोडिएर आएको छ भने त्यसलाई मात्र हटाउने, नत्र हुबहु राख्ने
             if (str.includes('T')) {
                 str = str.split('T')[0];
             }
-            return str;
+            // यदि हाइफन (-) आएको छ भने त्यसलाई स्ल्याश (/) मा बदल्ने ताकी ढाँचा एकैनास होस्
+            return str.replace(/-/g, '/');
         }
 
         function renderTables() {
