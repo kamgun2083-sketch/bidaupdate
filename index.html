@@ -754,8 +754,16 @@
         function addLeave(event) {
             event.preventDefault();
             const startDate = document.getElementById('start_date').value;
-            const totalDays = document.getElementById('total_days').value;
-            const returnDate = calculateReturnDate(startDate, totalDays);
+const totalDays = parseInt(document.getElementById('total_days').value) || 0;
+
+// नयाँ थपिएको लाइन: सार्वजनिक बिदाको संख्या लिने
+const publicHolidays = parseInt(document.getElementById('public_holidays').value) || 0;
+
+// दुवै दिनलाई जोडेर कुल दिन निकाल्ने
+const grandTotalDays = totalDays + publicHolidays;
+
+// क्याल्कुलेसन गर्दा अब पुरानो totalDays को सट्टा 'grandTotalDays' पठाउने
+const returnDate = calculateReturnDate(startDate, grandTotalDays);
 
             const newLeave = {
                 id: Date.now(),
@@ -764,7 +772,7 @@
                 name: document.getElementById('name').value,
                 type: document.getElementById('leave_type').value,
                 startDate: startDate,
-                days: totalDays,
+                days: grandTotalDays, // यहाँ कुल दिन (बिदा + सार्वजनिक बिदा) जानुपर्छ
                 returnDate: returnDate,
                 remarks: '',
                 status: 'Active'
