@@ -232,7 +232,6 @@
                 <label>नाम थर:</label>
                 <input type="text" id="name" readonly required placeholder="नाम देखा पर्नेछ">
 
-                <!-- बाँकी बिदा देखाउने बक्स -->
                 <div id="leave_balance_display" class="balance-box" style="display: none;">
                     <p>बाँकी घर बिदा: <span id="bal_ghar" style="color: var(--police-blue);">30</span> दिन</p>
                     <p>बाँकी भैपरी आउने बिदा: <span id="bal_bhaipari" style="color: var(--police-blue);">12</span> दिन</p>
@@ -336,21 +335,20 @@
 
         const employeeDatabase = {
             "33223": { rank: "प्रउ", name: "तिलक भारती" },
-    "34468": { rank: "प्रनाउ", name: "खगेन्द्र बहादुर खड्का" },
-    "313397": { rank: "प्रनि", name: "छे फिन्जो भोटे" },
-    "313249": { rank: "प्रनि", name: "जनक राज ढुंगाना" },
-    "363519": { rank: "प्रनि", name: "केशव राज भट्ट" },
-    "472445": { rank: "प्रनि", name: "अविनाश दीप जि.सी." },
-    "125879": { rank: "प्रवनानि", name: "दिलीप कुमार श्रेष्ठ" },
-    "125724": { rank: "प्रवनानि", name: "दिनेश थापा" },
-    "350396": { rank: "प्रवनानि", name: "भिमसेन पोखरेल" },
-    "22577": { rank: "प्रवनानि", name: "समिर कुमार विष्ट" },
-    "125522": { rank: "प्रवनानि", name: "अनुप राउत" },
-    "125278": { rank: "प्रवनानि", name: "गोकर्ण थापा" },
-    "361305": { rank: "प्रनानि", name: "सरस्वती टण्डन" },
-    "312371": { rank: "प्रनानि", name: "ईश्वर कुमार महर्जन" },
-    "306447": { rank: "प्रनानि", name: "दीपक बाबु थापा" },
-    
+            "34468": { rank: "प्रनाउ", name: "खगेन्द्र बहादुर खड्का" },
+            "313397": { rank: "प्रनि", name: "छे फिन्जो भोटे" },
+            "313249": { rank: "प्रनि", name: "जनक राज ढुंगाना" },
+            "363519": { rank: "प्रनि", name: "केशव राज भट्ट" },
+            "472445": { rank: "प्रनि", name: "अविनाश दीप जि.सी." },
+            "125879": { rank: "प्रवनानि", name: "दिलीप कुमार श्रेष्ठ" },
+            "125724": { rank: "प्रवनानि", name: "दिनेश थापा" },
+            "350396": { rank: "प्रवनानि", name: "भिमसेन पोखरेल" },
+            "22577": { rank: "प्रवनानि", name: "समिर कुमार विष्ट" },
+            "125522": { rank: "प्रवनानि", name: "अनुप राउत" },
+            "125278": { rank: "प्रवनानि", name: "गोकर्ण थापा" },
+            "361305": { rank: "प्रनानि", name: "सरस्वती टण्डन" },
+            "312371": { rank: "प्रनानि", name: "ईश्वर कुमार महर्जन" },
+            "306447": { rank: "प्रनानि", name: "दीपक बाबु थापा" }
         };
 
         let leavesData = [];
@@ -428,13 +426,30 @@
         }
 
         function calculateReturnDate(startDate, totalDays, publicHolidays) {
-            let cleanDate = startDate.replace(/-/g, '/');
+            if (!startDate) return "";
+            let cleanDate = String(startDate).trim();
+            if (cleanDate.includes('T')) {
+                cleanDate = cleanDate.split('T')[0];
+            }
+            cleanDate = cleanDate.replace(/-/g, '/');
             let parts = cleanDate.split('/');
             
             if (parts.length === 3) {
-                let year = parseInt(parts[0]);
-                let month = parseInt(parts[1]);
-                let startDay = parseInt(parts[2]);
+                let year, month, startDay;
+                // यदि format M/D/YYYY (जस्तै 1/22/2083) आएमा
+                if (parts[2].length === 4) {
+                    year = parseInt(parts[2]);
+                    month = parseInt(parts[0]);
+                    startDay = parseInt(parts[1]);
+                } 
+                // यदि format YYYY/MM/DD आएमा
+                else if (parts[0].length === 4) {
+                    year = parseInt(parts[0]);
+                    month = parseInt(parts[1]);
+                    startDay = parseInt(parts[2]);
+                } else {
+                    return "";
+                }
                 
                 let daysNum = parseInt(totalDays) || 0;
                 let pubNum = parseInt(publicHolidays) || 0;
@@ -483,13 +498,11 @@
             const totalDays = parseInt(document.getElementById('total_days').value) || 0;
             const code = document.getElementById('computer_code').value;
 
-            // नियम प्रमाणीकरण (Validation Rules)
             if (leaveType === "भैपरी आउने बिदा" && totalDays > 4) {
                 alert("भैपरी आउने बिदा एक पटकमा बढीमा ४ दिनभन्दा लिन मिल्दैन!");
                 return;
             }
 
-            // बाँकी बिदा चेक गर्ने
             let usedGhar = 0;
             let usedBhaipari = 0;
             leavesData.forEach(item => {
@@ -591,12 +604,10 @@
             if (!dateStr) return '-';
             let str = String(dateStr).trim();
             
-            // यदि गुगल सिटबाट ISO format (2025-03-31T...) मा आएको छ भने
             if (str.includes('T')) {
                 str = str.split('T')[0];
             }
             
-            // यदि सिटमा M/D/YYYY वा YYYY/M/D जस्तो format छ भने मिलाउने
             let parts = str.split(/[\/-]/);
             if (parts.length === 3) {
                 if (parts[0].length === 4) {
