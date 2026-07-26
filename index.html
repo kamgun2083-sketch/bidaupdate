@@ -371,7 +371,7 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxglfVnEq7qJMhjyjuVMwkBpu8JabxSGxN57OWvMgiG_vzdUPipRh03caR3QOnrJO8/exec"; 
 
         const employeeDatabase = {
-             "33223": { rank: "प्रउ", name: "तिलक भारती" },
+            "33223": { rank: "प्रउ", name: "तिलक भारती" },
     "34468": { rank: "प्रनाउ", name: "खगेन्द्र बहादुर खड्का" },
     "313397": { rank: "प्रनि", name: "छे फिन्जो भोटे" },
     "313249": { rank: "प्रनि", name: "जनक राज ढुंगाना" },
@@ -598,7 +598,7 @@
     "497093": { rank: "प्रज", name: "धन बहादुर वि.सी." },
     "496183": { rank: "प्रज", name: "धिरज थापा" },
     "496218": { rank: "प्रज", name: "नवराज ढकाल" },
-    "496778": { rank: "प्रज", name: "प्रशान्त रावत" },
+    "496778": { rank: "प्रज", name: "पशान्त रावत" },
     "496281": { rank: "प्रज", name: "प्रेम वि.क." },
     "496899": { rank: "प्रज", name: "बिनोद बहादुर नायक" },
     "496214": { rank: "प्रज", name: "भुवन वि.क." },
@@ -710,6 +710,7 @@
     "558856": { rank: "प्रकास", name: "कम्मान सिंह विश्वकर्मा" },
     "558474": { rank: "प्रकास", name: "एलिसा राई" },
     "550287": { rank: "प्रकास", name: "राम बहादुर अधिकारी" }
+    
     
         };
 
@@ -986,6 +987,32 @@
             return str.replace(/-/g, '/');
         }
 
+        // मितिको आधारमा तुलना गर्न सहयोग गर्ने फङ्सन (YYYY/MM/DD वा YYYY-MM-DD लाई संख्यामा बदल्ने)
+        function parseDateToComparableNumber(dateStr) {
+            if (!dateStr) return 0;
+            let cleanStr = String(dateStr).trim();
+            if (cleanStr.includes('T')) {
+                cleanStr = cleanStr.split('T')[0];
+            }
+            let parts = cleanStr.split(/[\/-]/);
+            if (parts.length === 3) {
+                let y, m, d;
+                if (parts[0].length === 4) {
+                    y = parseInt(parts[0]) || 0;
+                    m = parseInt(parts[1]) || 0;
+                    d = parseInt(parts[2]) || 0;
+                } else if (parts[2].length === 4) {
+                    y = parseInt(parts[2]) || 0;
+                    m = parseInt(parts[0]) || 0;
+                    d = parseInt(parts[1]) || 0;
+                } else {
+                    return 0;
+                }
+                return y * 10000 + m * 100 + d;
+            }
+            return 0;
+        }
+
         function renderTables() {
             const activeBody = document.getElementById('active_leaves_body');
             const returnedBody = document.getElementById('returned_leaves_body');
@@ -994,6 +1021,13 @@
             let activeList = leavesData.filter(item => String(item.status).trim() === 'Active');
             let returnedList = leavesData.filter(item => String(item.status).trim() === 'Returned');
             
+            // सुरु मिति (startDate) अनुसार पुरानो मितι (अगाडिको मिति) भएकाहरूलाई माथि देखाउने गरी सर्ट (Sort) गर्ने
+            activeList.sort((a, b) => {
+                let dateA = parseDateToComparableNumber(a.startDate);
+                let dateB = parseDateToComparableNumber(b.startDate);
+                return dateA - dateB; // सानो मिति (अगाडिको मिति) भए माथि आउनेछ
+            });
+
             activeCount.innerText = activeList.length;
 
             // दर्जागत गणना गर्ने (Rank-wise counting)
