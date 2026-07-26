@@ -277,7 +277,7 @@
                             <th>प्रवनानि</th>
                             <th>प्रनानि</th>
                             <th>प्रसनि</th>
-                            <th>प्रबह</th>
+                            <th>प्रवह</th>
                             <th>प्रह</th>
                             <th>प्रसह</th>
                             <th>प्रज</th>
@@ -997,7 +997,7 @@
             activeCount.innerText = activeList.length;
 
             // दर्जागत गणना गर्ने (Rank-wise counting)
-            let counts = { "प्रउ": 0, "प्रनाउ": 0, "प्रनि": 0, "प्रवनानि": 0, "प्रनानि": 0, "प्रसनि": 0, "प्रबह": 0, "प्रह": 0, "प्रसह": 0, "प्रज": 0, "प्रकास": 0 };
+            let counts = { "प्रउ": 0, "प्रनाउ": 0, "प्रनि": 0, "प्रवनानि": 0, "प्रनानि": 0, "प्रसनि": 0, "प्रवह": 0, "प्रह": 0, "प्रसह": 0, "प्रज": 0, "प्रकास": 0 };
             
             activeList.forEach(item => {
                 let r = String(item.rank).trim();
@@ -1012,7 +1012,7 @@
             document.getElementById('sum_pravanani').innerText = counts["प्रवनानि"];
             document.getElementById('sum_pranani').innerText = counts["प्रनानि"];
             document.getElementById('sum_prasani').innerText = counts["प्रसनि"];
-            document.getElementById('sum_prabaha').innerText = counts["प्रबह"];
+            document.getElementById('sum_prabaha').innerText = counts["प्रवह"];
             document.getElementById('sum_prah').innerText = counts["प्रह"];
             document.getElementById('sum_prasah').innerText = counts["प्रसह"];
             document.getElementById('sum_praj').innerText = counts["प्रज"];
