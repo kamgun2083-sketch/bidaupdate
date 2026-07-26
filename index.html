@@ -590,9 +590,28 @@
         function formatDate(dateStr) {
             if (!dateStr) return '-';
             let str = String(dateStr).trim();
+            
+            // यदि गुगल सिटबाट ISO format (2025-03-31T...) मा आएको छ भने
             if (str.includes('T')) {
                 str = str.split('T')[0];
             }
+            
+            // यदि सिटमा M/D/YYYY वा YYYY/M/D जस्तो format छ भने मिलाउने
+            let parts = str.split(/[\/-]/);
+            if (parts.length === 3) {
+                if (parts[0].length === 4) {
+                    let year = parts[0];
+                    let month = parts[1].padStart(2, '0');
+                    let day = parts[2].padStart(2, '0');
+                    return `${year}/${month}/${day}`;
+                } else if (parts[2].length === 4) {
+                    let year = parts[2];
+                    let month = parts[0].padStart(2, '0');
+                    let day = parts[1].padStart(2, '0');
+                    return `${year}/${month}/${day}`;
+                }
+            }
+            
             return str.replace(/-/g, '/');
         }
 
