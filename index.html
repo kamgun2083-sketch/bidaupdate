@@ -302,7 +302,7 @@
                 </table>
             </div>
 
-           <div class="table-container" id="printable-active-list" style="max-width: 780px; margin: auto;">
+           <div class="table-container" id="printable-active-list" style="max-width: 820px; margin: auto;">
     <h3>
         <span>हाल बिदामा रहेका प्रहरी कर्मचारीहरूको नामावली (<span id="active_count" style="color: #d9534f;">0</span> जना)</span>
         <button class="print-btn" onclick="window.print()">प्रिन्ट गर्नुहोस्</button>
@@ -314,11 +314,11 @@
                 <th style="padding: 8px; border: 1px solid #ddd;">कम्प्युटर कोड</th>
                 <th style="padding: 8px; border: 1px solid #ddd;">दर्जा</th>
                 <th style="padding: 8px; border: 1px solid #ddd;">नाम थर</th>
-                <th style="padding: 8px; border: 1px solid #ddd;">बिदाको किसिम</th>
-                <th style="padding: 8px; border: 1px solid #ddd;">सुरु मिति</th>
-                <th style="padding: 8px; border: 1px solid #ddd; width: 60px;">दिन</th> <!-- दिनको स्तम्भको चौडाइ मिलाइएको -->
-                <th onclick="sortTableByDate()" style="cursor: pointer; padding: 8px; border: 1px solid #ddd;" title="क्लिक गरेर सर्ट गर्नुहोस्">हाजिर हुने मिति ⇅</th>
-                <th class="action-col" style="padding: 8px; border: 1px solid #ddd;">हाजिर भएको (Mark Present)</th>
+                <th style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">बिदाको किसिम</th>
+                <th style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">सुरु मिति</th>
+                <th style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">दिन</th>
+                <th onclick="sortTableByDate()" style="cursor: pointer; padding: 8px; border: 1px solid #ddd; white-space: nowrap;" title="क्लिक गरेर सर्ट गर्नुहोस्">हाजिर हुने मिति ⇅</th>
+                <th class="action-col" style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">हाजिर भएको (Mark Present)</th>
             </tr>
         </thead>
         <tbody id="active_leaves_body">
@@ -343,7 +343,7 @@
             return;
         }
 
-        // हाजिर हुने मिति अनुसार पुरानो मितի माथि आउने गरी सर्ट गर्ने
+        // हाजिर हुने मिति अनुसार पुरानो मिति माथि आउने गरी सर्ट गर्ने
         dataFromDatabase.sort((a, b) => {
             return new Date(a.return_date) - new Date(b.return_date);
         });
@@ -360,14 +360,14 @@
             }
 
             row.innerHTML = `
-                <td style="padding: 6px; border: 1px solid #ddd;">${item.computer_code}</td>
-                <td style="padding: 6px; border: 1px solid #ddd;">${item.rank}</td>
-                <td style="padding: 6px; border: 1px solid #ddd;">${item.full_name}</td>
-                <td style="padding: 6px; border: 1px solid #ddd;">${item.leave_type}</td>
+                <td style="padding: 6px; border: 1px solid #ddd; white-space: nowrap;">${item.computer_code}</td>
+                <td style="padding: 6px; border: 1px solid #ddd; white-space: nowrap;">${item.rank}</td>
+                <td style="padding: 6px; border: 1px solid #ddd; white-space: nowrap;">${item.full_name}</td>
+                <td style="padding: 6px; border: 1px solid #ddd; white-space: nowrap;">${item.leave_type}</td>
                 <td style="padding: 6px; border: 1px solid #ddd; white-space: nowrap;">${item.start_date}</td>
                 <td style="padding: 6px; border: 1px solid #ddd; white-space: nowrap; text-align: center;">${item.total_days} दिन</td>
                 <td style="padding: 6px; border: 1px solid #ddd; white-space: nowrap;"><strong>${item.return_date}</strong></td>
-                <td class="action-col" style="padding: 6px; border: 1px solid #ddd; text-align: center;">
+                <td class="action-col" style="padding: 6px; border: 1px solid #ddd; white-space: nowrap; text-align: center;">
                     <button onclick="markPresent('${item.computer_code}')" class="present-btn">हाजिर गराउनुहोस्</button>
                 </td>
             `;
