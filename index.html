@@ -331,7 +331,19 @@
 
 <!-- जाभास्क्रिप्ट कोड -->
 <script>
-    function loadActiveLeaves(dataFromDatabase) {
+    // नेपाली मितिलाई कुल दिनमा बदल्ने सानो फंクション (यसले मिति तुलना गर्न सजिलो बनाउँछ)
+    function bsToDays(bsDateStr) {
+        if (!bsDateStr) return 0;
+        let parts = bsDateStr.split('/');
+        if (parts.length !== 3) return 0;
+        let year = parseInt(parts[0], 10);
+        let month = parseInt(parts[1], 10);
+        let day = parseInt(parts[2], 10);
+        // मोटामोटी हिसाबले दिनमा कन्भर्ट गर्ने (१ वर्ष = ३६५ दिन, १ महिना = ३० दिन मानेर)
+        return (year * 365) + (month * 30) + day;
+    }
+
+    function loadActiveLeaves(dataFromDatabase, currentNepaliDate) {
         const tbody = document.getElementById('active_leaves_body');
         const countSpan = document.getElementById('active_count');
         
@@ -343,20 +355,31 @@
             return;
         }
 
-        // हाजिर हुने मिति अनुसार पुरानो मिति माथि आउने गरी सर्ट गर्ने
+        // १. मिति अनुसार स्वतः सर्ट गर्ने
         dataFromDatabase.sort((a, b) => {
-            return new Date(a.return_date) - new Date(b.return_date);
+            return a.return_date.localeCompare(b.return_date);
         });
 
         countSpan.innerText = dataFromDatabase.length;
 
+        let todayDays = bsToDays(currentNepaliDate);
+
+        // २. टेबलमा डाटा इन्जेक्ट गर्ने र हाइलाइट लगाउने
         dataFromDatabase.forEach(item => {
             let row = document.createElement('tr');
             
-            let today = new Date().toISOString().split('T')[0];
-            let isOverdue = item.return_date <= today;
-            if(isOverdue) {
-                row.style.backgroundColor = "#fff3f3"; 
+            let returnDays = bsToDays(item.return_date);
+            let diffDays = returnDays - todayDays; // हाजिर हुने मिति र आजको मिति बीचको फरक
+
+            // हाइलाइट नियम:
+            if (currentNepaliDate) {
+                if (returnDays <= todayDays) {
+                    // मिति नाघेको वा आजै हाजिर हुने भएमा -> रातो रङ (Red)
+                    row.style.backgroundColor = "#fff3f3"; 
+                } else if (diffDays === 1) {
+                    // हाजिर हुनुभन्दा ठ ακ्याक्कै १ दिन अगाडि भएमा -> पहेंलो रङ (Yellow)
+                    row.style.backgroundColor = "#fffde7"; 
+                }
             }
 
             row.innerHTML = `
@@ -375,6 +398,7 @@
         });
     }
 
+    // टेबल सर्ट गर्ने फंクション
     function sortTableByDate() {
         let table = document.getElementById("active_leaves_table");
         let switching = true;
@@ -388,7 +412,7 @@
                 x = rows[i].getElementsByTagName("TD")[6].innerText;
                 y = rows[i + 1].getElementsByTagName("TD")[6].innerText;
                 
-                if (x.toLowerCase() > y.toLowerCase()) {
+                if (x.localeCompare(y) > 0) {
                     shouldSwitch = true;
                     break;
                 }
