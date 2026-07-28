@@ -302,7 +302,10 @@
                 </table>
             </div>
 
-          <div class="table-container" id="printable-active-list" style="max-width: 820px; margin: auto;">
+          <!-- १. नेपाली मिति कन्भर्ट गर्ने आधिकारिक लाइब्रेरी (CDN) थपिएको -->
+<script src="https://nepali-date-converter.github.io/nepali-date-converter/nepali-date-converter.min.js"></script>
+
+<div class="table-container" id="printable-active-list" style="max-width: 820px; margin: auto;">
     <h3>
         <span>हाल बिदामा रहेका प्रहरी कर्मचारीहरूको नामावली (<span id="active_count" style="color: #d9534f;">0</span> जना)</span>
         <button class="print-btn" onclick="window.print()">प्रिन्ट गर्नुहोस्</button>
@@ -329,10 +332,18 @@
     </table>
 </div>
 
-<!-- जाभास्क्रिप्ट पूर्ण कोड -->
+<!-- जाभास्क्रिप्ट कोड -->
 <script>
-    // आजको वास्तविक नेपाली मिति (तपाईंको प्रणाली अनुसार हाललाई २०८३/०४/१२ सेट गरिएको छ)
-    const currentNepaliDate = "2083/04/12";
+    // २. आजको अंग्रेजी मितिलाई स्वतः नेपाली मितिमा बदलेर 'YYYY/MM/DD' फर्मμαटमा निकाल्ने
+    function getTodayNepaliDate() {
+        try {
+            let todayBS = new NepaliDate().format('YYYY/MM/DD');
+            return todayBS;
+        } catch (e) {
+            // यदि कुनै कारणले लाइब्रेरी लोड भएन भने सुरक्षाको लागि खाली वा डिफल्ट मिति
+            return ""; 
+        }
+    }
 
     // नेपाली मितिलाई कुल दिनमा बदल्ने फंクション
     function bsToDays(bsDateStr) {
@@ -357,7 +368,10 @@
             return;
         }
 
-        // १. मिति अनुसार स्वतः सर्ट गर्ने (पुरानो मिति माथि आउने)
+        // ३. आजको मिति कोडले स्वतः पत्ता लगाउँछ (हातले फेरिराख्नु पर्दैन)
+        let currentNepaliDate = getTodayNepaliDate();
+
+        // ४. मिति अनुसार स्वतः सर्ट गर्ने (पुरानो मिति माथि आउने)
         dataFromDatabase.sort((a, b) => {
             return a.return_date.localeCompare(b.return_date);
         });
@@ -366,7 +380,7 @@
 
         let todayDays = bsToDays(currentNepaliDate);
 
-        // २. टेबलमा डाटा इन्जेक्ट गर्ने र हाइलाइट लगाउने
+        // ५. टेबलमा डाटा इन्जेक्ट गर्ने र हाइलाइट लगाउने
         dataFromDatabase.forEach(item => {
             let row = document.createElement('tr');
             
@@ -374,12 +388,14 @@
             let diffDays = returnDays - todayDays; // हाजिर हुने मिति र आजको मिति बीचको फरक
 
             // हाइलाइट नियम
-            if (returnDays <= todayDays) {
-                // मिति नाघेको वा आजै हाजिर हुने भएमा -> रातो रङ (Red)
-                row.style.backgroundColor = "#fff3f3"; 
-            } else if (diffDays === 1) {
-                // हाजिर हुन ठ्याक्कै १ दिन अगाडि (भोलि हाजिर हुने) भएमा -> पहेंलो रङ (Yellow)
-                row.style.backgroundColor = "#fffde7"; 
+            if (currentNepaliDate && returnDays > 0) {
+                if (returnDays <= todayDays) {
+                    // मिति नाघेको वा आजै हाजिर हुने भएमा -> रातो रङ (Red)
+                    row.style.backgroundColor = "#fff3f3"; 
+                } else if (diffDays === 1) {
+                    // हाजिर हुन ठ्याक्कै १ दिन अगाडि (भोलि हाजिर हुने) भएमा -> पहेंलो रङ (Yellow)
+                    row.style.backgroundColor = "#fffde7"; 
+                }
             }
 
             row.innerHTML = `
