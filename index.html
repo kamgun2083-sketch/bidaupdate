@@ -792,60 +792,84 @@
             document.getElementById('bal_bhaipari').innerText = remBhaipari;
         }
 
-        function calculateReturnDate(startDate, totalDays, publicHolidays) {
-            if (!startDate) return "";
-            let cleanDate = String(startDate).trim();
-            if (cleanDate.includes('T')) {
-                cleanDate = cleanDate.split('T')[0];
-            }
-            cleanDate = cleanDate.replace(/-/g, '/');
-            let parts = cleanDate.split('/');
-            
-            if (parts.length === 3) {
-                let year, month, startDay;
-                if (parts[2].length === 4) {
-                    year = parseInt(parts[2]);
-                    month = parseInt(parts[0]);
-                    startDay = parseInt(parts[1]);
-                } 
-                else if (parts[0].length === 4) {
-                    year = parseInt(parts[0]);
-                    month = parseInt(parts[1]);
-                    startDay = parseInt(parts[2]);
-                } else {
-                    return "";
-                }
-                
-                let daysNum = parseInt(totalDays) || 0;
-                let pubNum = parseInt(publicHolidays) || 0;
-                
-                if (isNaN(year) || isNaN(month) || isNaN(startDay) || isNaN(daysNum)) return "";
-
-                let totalLeaveSpan = daysNum + pubNum;
-                let targetDay = startDay + totalLeaveSpan; 
-                
-                while (targetDay > 30) {
-                    targetDay -= 30;
-                    month += 1;
-                }
-                
-                while (targetDay <= 0) {
-                    targetDay += 30;
-                    month -= 1;
-                }
-
-                if (month > 12) {
-                    month = 1;
-                    year += 1;
-                } else if (month < 1) {
-                    month = 12;
-                    year -= 1;
-                }
-
-                return `${year}/${String(month).padStart(2, '0')}/${String(targetDay).padStart(2, '0')}`;
-            }
+       function calculateReturnDate(startDate, totalDays, publicHolidays) {
+    if (!startDate) return "";
+    let cleanDate = String(startDate).trim();
+    if (cleanDate.includes('T')) {
+        cleanDate = cleanDate.split('T')[0];
+    }
+    cleanDate = cleanDate.replace(/-/g, '/');
+    let parts = cleanDate.split('/');
+    
+    if (parts.length === 3) {
+        let year, month, startDay;
+        if (parts[2].length === 4) {
+            year = parseInt(parts[2]);
+            month = parseInt(parts[0]);
+            startDay = parseInt(parts[1]);
+        } 
+        else if (parts[0].length === 4) {
+            year = parseInt(parts[0]);
+            month = parseInt(parts[1]);
+            startDay = parseInt(parts[2]);
+        } else {
             return "";
         }
+        
+        let daysNum = parseInt(totalDays) || 0;
+        let pubNum = parseInt(publicHolidays) || 0;
+        
+        if (isNaN(year) || isNaN(month) || isNaN(startDay) || isNaN(daysNum)) return "";
+
+        // नेपाली महिना अनुसार दिनहरूको संख्या (वैशाखदेखि चैत्रसम्म)
+        // [१: वैशाख, २: जेठ, ३: असार, ४: साउन, ५: भदौ, ६: असोज, ७: कार्तिक, ८: मंसिर, ९: पुस, १०: माघ, ११: फागुन, १२: चैत्र]
+        const nepaliMonthDays = {
+            1: 31,  // वैशाख
+            2: 31,  // जेठ
+            3: 32,  // असार
+            4: 31,  // साउन
+            5: 29,  // भदौ
+            6: 31,  // असोज
+            7: 30,  // कार्तिक
+            8: 29,  // मंसिर
+            9: 30,  // पुस
+            10: 29, // माघ
+            11: 30, // फागुन
+            12: 30  // चैत्र
+        };
+
+        let totalLeaveSpan = daysNum + pubNum;
+        startDay += totalLeaveSpan; 
+        
+        // महिना र दिनको हिसाब मिलाउने लूप
+        while (true) {
+            // महिनाको दायरा मिलाउने (१ देखि १२)
+            if (month > 12) {
+                month = 1;
+                year += 1;
+            } else if (month < 1) {
+                month = 12;
+                year -= 1;
+            }
+
+            let daysInCurrentMonth = nepaliMonthDays[month];
+
+            if (startDay > daysInCurrentMonth) {
+                startDay -= daysInCurrentMonth;
+                month += 1;
+            } else if (startDay <= 0) {
+                month -= 1;
+                let prevMonth = (month < 1) ? 12 : month;
+                startDay += nepaliMonthDays[prevMonth];
+            } else {
+                break;
+            }
+        }
+
+        return `${year}/${String(month).padStart(2, '0')}/${String(startDay).padStart(2, '0')}`;
+    }
+    return "";
+}
 
         function autoCalculateReturnDate() {
             const startDate = document.getElementById('start_date').value;
