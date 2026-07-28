@@ -6,254 +6,369 @@
     <title>काठमाडौं उपत्यका प्रहरी सशस्त्र प्रहरी गण नं. २ महाराजगंज - बिदा व्यवस्थापन प्रणाली</title>
     <style>
         :root {
-            --police-blue: #0b2265;
-            --police-gold: #d4af37;
+            --police-blue: #002b49;
+            --police-gold: #c5a059;
             --light-bg: #f4f6f9;
         }
-        body {
-            font-family: 'Mukta', sans-serif;
-            background-color: var(--light-bg);
-            margin: 0;
-            padding: 0;
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            background-color: var(--light-bg); 
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         header {
             background-color: var(--police-blue);
             color: white;
-            text-align: center;
-            padding: 15px;
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
             border-bottom: 4px solid var(--police-gold);
+            justify-content: space-between;
         }
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
+        header div h1 { font-size: 20px; margin: 0; }
+        header div p { margin: 2px 0 0 0; font-size: 13px; color: #ccc; }
+        .main-container {
+            display: flex;
+            justify-content: space-between;
             padding: 20px;
-            background: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            gap: 20px;
+            flex-wrap: wrap;
+            flex: 1;
         }
-        .form-group {
-            margin-bottom: 15px;
+        .form-container {
+            background: #fff; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+            flex: 1;
+            min-width: 320px;
+            max-width: 400px;
+            border-top: 5px solid var(--police-blue);
+            height: fit-content;
         }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+        .right-container {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 600px;
         }
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
+        .table-container, .history-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            border-top: 5px solid var(--police-gold);
+        }
+        h3 { 
+            color: var(--police-blue); 
+            margin-top: 0;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        label { display: block; margin-top: 10px; font-weight: 600; font-size: 13px; color: #444; }
+        input, select { 
+            width: 100%; 
+            padding: 8px; 
+            margin-top: 4px; 
+            box-sizing: border-box; 
             border: 1px solid #ccc;
             border-radius: 4px;
+            font-size: 13px;
         }
-        button {
-            background-color: var(--police-blue);
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
+        button { 
+            background: var(--police-blue); 
+            color: white; 
+            padding: 10px; 
+            border: none; 
+            width: 100%; 
+            margin-top: 15px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 14px;
+            font-weight: bold;
         }
-        button:hover {
-            background-color: #081747;
+        button:hover { background: #001a2e; }
+        .print-btn {
+            background: #28a745;
+            width: auto;
+            padding: 6px 12px;
+            margin: 0;
+            font-size: 12px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
+        .print-btn:hover { background: #218838; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; border: 1px solid #e0e0e0; text-align: center; font-size: 13px; }
+        th { background-color: var(--police-blue); color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .info { color: #d9534f; font-size: 12px; margin-top: 3px; font-weight: 500; }
+
+        #loading-indicator {
+            display: none;
+            color: #d9534f;
+            font-size: 12px;
+            font-weight: bold;
             text-align: center;
+            margin-top: 5px;
         }
-        th {
+
+        footer {
             background-color: var(--police-blue);
             color: white;
+            text-align: center;
+            padding: 12px;
+            font-size: 13px;
+            border-top: 3px solid var(--police-gold);
+            margin-top: auto;
         }
-        #login-overlay, #modal-overlay {
+        footer span {
+            color: var(--police-gold);
+            font-weight: bold;
+        }
+
+        #login-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-color: rgba(0, 43, 73, 0.9);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999;
+        }
+        .login-box {
+            background: #fff; padding: 30px; border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); width: 100%; max-width: 350px;
+            border-top: 5px solid var(--police-gold); text-align: center;
+        }
+        .login-box h2 { color: var(--police-blue); margin-top: 0; font-size: 18px; }
+        .login-error { color: #d9534f; font-size: 12px; margin-top: 10px; display: none; }
+
+        #modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none; justify-content: center; align-items: center;
             z-index: 1000;
         }
-        .login-box, .modal-box {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            width: 350px;
-            text-align: center;
+        .modal-box {
+            background: #fff; padding: 20px; border-radius: 8px;
+            width: 100%; max-width: 350px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border-top: 5px solid var(--police-blue);
+        }
+        .modal-box h4 { margin-top: 0; color: var(--police-blue); }
+
+        .balance-box {
+            background: #eef2f7;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 12px;
+            border-left: 4px solid var(--police-gold);
+        }
+        .balance-box p { margin: 3px 0; font-weight: 600; color: #333; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #printable-active-list, #printable-active-list * { visibility: visible; }
+            #printable-active-list {
+                position: absolute; left: 0; top: 0; width: 100%;
+                box-shadow: none; border: none; margin: 0; padding: 10px;
+            }
+            .print-btn, .action-col { display: none !important; }
         }
     </style>
 </head>
 <body>
 
-    <!-- लगइन ओभरले -->
     <div id="login-overlay">
         <div class="login-box">
             <h2>प्रणाली लगइन</h2>
+            <p style="font-size: 12px; color: #666;">कृपया युजर आईडी र पासवर्ड प्रविष्ट गर्नुहोस्</p>
             <form onsubmit="handleLogin(event)">
-                <div class="form-group">
-                    <input type="text" id="login_user" placeholder="युजरनेम" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" id="login_pass" placeholder="पासवर्ड" required>
-                </div>
-                <button type="submit" style="width: 100%;">लगइन गर्नुहोस्</button>
-                <p id="login_error" style="color: red; display: none; margin-top: 10px;">गलत युजरनेम वा पासवर्ड!</p>
+                <label style="text-align: left;">युजर आईडी (Username):</label>
+                <input type="text" id="login_user" placeholder="युजरनेम हाल्नुहोस्" required>
+                <label style="text-align: left;">पासवर्ड (Password):</label>
+                <input type="password" id="login_pass" placeholder="पासवर्ड हाल्नुहोस्" required>
+                <button type="submit">लगइन गर्नुहोस्</button>
+                <div id="login_error" class="login-error">गलत युजर आईडी वा पासवर्ड!</div>
             </form>
         </div>
     </div>
 
-    <!-- मुख्य कन्टेनर -->
+    <div id="modal-overlay">
+        <div class="modal-box">
+            <h4>हाजिर गराउने (कैफियत विवरण)</h4>
+            <p style="font-size: 12px; color: #555;">यदि तोकिएको मितिभन्दा ढिला हाजिर भएमा वा अन्य कुरा भएमा कैफियत लेख्नुहोस्:</p>
+            <label>कैफियत (Remarks):</label>
+            <input type="text" id="modal_remarks" placeholder="जस्तै: २ दिन ढिला आएको">
+            <button onclick="confirmMarkPresent()">सुरक्षित गरी हाजिर गराउने</button>
+            <button onclick="closeModal()" style="background: #6c757d; margin-top: 5px;">रद्द गर्ने</button>
+        </div>
+    </div>
+
     <header>
-        <h1>काठमाडौं उपत्यका प्रहरी सशस्त्र प्रहरी गण नं. २ महाराजगंज</h1>
-        <p>बिदा व्यवस्थापन प्रणाली</p>
+        <div>
+            <h1>काठमाडौं उपत्यका प्रहरी सशस्त्र प्रहरी गण नं. २ महाराजगंज</h1>
+            <p>प्रहरी कर्मचारी बिदा व्यवस्थापन प्रणाली (Cloud Connected)</p>
+        </div>
     </header>
 
-    <div class="container">
-        <h3>नयाँ बिदा फारम</h3>
-        <form id="leaveForm" onsubmit="saveLeaveRecord(event)">
-            <div class="form-group">
-                <label>कम्प्युटर कोड:</label>
-                <input type="text" id="computer_code" oninput="fetchEmployee(this.value)" required>
-                <small id="emp_info" style="color: red;"></small>
-            </div>
-            <div class="form-group">
+    <div class="main-container">
+        <div class="form-container">
+            <h3>बिदा दर्ता फारम</h3>
+            <form id="leaveForm" onsubmit="saveLeaveRecord(event)">
+                <label>कम्प्युटर कोड / संकेत नं:</label>
+                <input type="text" id="computer_code" placeholder="जस्तै: 33223" required onkeyup="fetchEmployee(this.value)">
+                <div id="emp_info" class="info"></div>
+
                 <label>दर्जा:</label>
-                <input type="text" id="rank" readonly>
-            </div>
-            <div class="form-group">
-                <label>नाम:</label>
-                <input type="text" id="name" readonly>
-            </div>
-            <div class="form-group">
-                <label>बिदाको किसिम:</label>
-                <select id="leave_type" required>
+                <input type="text" id="rank" readonly required placeholder="दर्जा देखा पर्नेछ">
+
+                <label>नाम थर:</label>
+                <input type="text" id="name" readonly required placeholder="नाम देखा पर्नेछ">
+
+                <div id="leave_balance_display" class="balance-box" style="display: none;">
+                    <p>बाँकी घर बिदा: <span id="bal_ghar" style="color: var(--police-blue);">30</span> दिन</p>
+                    <p>बाँकी भैपरी आउने बिदा: <span id="bal_bhaipari" style="color: var(--police-blue);">12</span> दिन</p>
+                </div>
+
+                <label>बिदाको प्रकार:</label>
+                <select id="leave_type">
                     <option value="घर बिदा">घर बिदा</option>
                     <option value="भैपरी आउने बिदा">भैपरी आउने बिदा</option>
+                    <option value="प्रसुती बिदा">प्रसुती बिदा</option>
+                    <option value="प्रसुती स्याहार बिदा">प्रसुती स्याहार बिदा</option>
+                    <option value="क्रिया बिदा">क्रिया बिदा</option>
+                    <option value="अन्य">अन्य</option>
                 </select>
-            </div>
-            <div id="leave_balance_display" style="display:none; background:#eef; padding:10px; margin-bottom:15px; border-radius:4px;">
-                बाँकी घर बिदा: <span id="bal_ghar" style="font-weight:bold;">30</span> दिन | 
-                बाँकी भैपरी आउने बिदा: <span id="bal_bhaipari" style="font-weight:bold;">12</span> दिन
-            </div>
-            <div class="form-group">
-                <label>बिदा सुरु मिति (YYYY/MM/DD):</label>
-                <input type="text" id="start_date" placeholder="२०८२/०१/०१" oninput="autoCalculateReturnDate()" required>
-            </div>
-            <div class="form-group">
-                <label>बिदा बस्ने दिन:</label>
-                <input type="number" id="total_days" oninput="autoCalculateReturnDate()" required>
-            </div>
-            <div class="form-group">
-                <label>बाटोको म्याद / सार्वजनिक बिदा दिन:</label>
+
+                <label>सुरु गर्ने मिति (वि.सं.):</label>
+                <input type="text" id="start_date" placeholder="२०८३/०४/०९" required oninput="autoCalculateReturnDate()">
+
+                <label>जम्मा दिन:</label>
+                <input type="number" id="total_days" placeholder="बिदा बसेको दिन" required oninput="autoCalculateReturnDate()">
+
+                <label>सार्वजनिक बिदा (Public Holidays):</label>
                 <input type="number" id="public_holidays" value="0" oninput="autoCalculateReturnDate()">
-            </div>
-            <div class="form-group">
-                <label>हाजिर हुनुपर्ने मिति:</label>
-                <input type="text" id="calculated_return_date" readonly style="background:#eee; font-weight:bold; color:#d9534f;">
-            </div>
-            <button type="submit" id="submit_btn">बिदा सेभ गर्नुहोस्</button>
-            <p id="loading-indicator" style="display:none; color:blue;">डाटा सेभ हुँदैछ, कृपया प्रतीक्षा गर्नुहोस्...</p>
-        </form>
 
-        <hr style="margin: 40px 0;">
+                <label style="color: #28a745;">हाजिर हुने मिति (स्वतः गणना):</label>
+                <input type="text" id="calculated_return_date" readonly style="background-color: #e9ecef; font-weight: bold; color: #28a745;" placeholder="मिति गणना हुनेछ">
 
-        <h3>हाल बिदामा रहेका कर्मचारीहरूको सूची (कुल: <span id="active_count">0</span>)</h3>
-        
-        <!-- दर्जागत सारांश तालिका -->
-        <div style="overflow-x:auto; margin-bottom: 15px;">
-            <table>
-                <tr>
-                    <th>प्रउ</th>
-                    <th>प्रनाउ</th>
-                    <th>प्रनि</th>
-                    <th>प्रवनानि</th>
-                    <th>प्रनानि</th>
-                    <th>प्रसनि</th>
-                    <th>प्रवह</th>
-                    <th>प्रह</th>
-                    <th>प्रसह</th>
-                    <th>प्रज</th>
-                    <th>प्रकास</th>
-                </tr>
-                <tr>
-                    <td id="sum_prou">0</td>
-                    <td id="sum_pranau">0</td>
-                    <td id="sum_prani">0</td>
-                    <td id="sum_pravanani">0</td>
-                    <td id="sum_pranani">0</td>
-                    <td id="sum_prasani">0</td>
-                    <td id="sum_prabaha">0</td>
-                    <td id="sum_prah">0</td>
-                    <td id="sum_prasah">0</td>
-                    <td id="sum_praj">0</td>
-                    <td id="sum_prakas">0</td>
-                </tr>
-            </table>
+                <button type="submit" id="submit_btn">बिदा रेकर्ड सुरक्षित गर्नुहोस्</button>
+                <div id="loading-indicator">डाटा सेभ हुँदैछ, कृपया पर्खनुहोस्...</div>
+            </form>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>कोड</th>
-                    <th>दर्जा</th>
-                    <th>नाम</th>
-                    <th>प्रकार</th>
-                    <th>सुरु मिति</th>
-                    <th>दिन</th>
-                    <th>हाजिर हुनुपर्ने मिति</th>
-                    <th>कार्य</th>
-                </tr>
-            </thead>
-            <tbody id="active_leaves_body">
-                <tr><td colspan="8">डाटा लोड हुँदैछ...</td></tr>
-            </tbody>
-        </table>
+        <div class="right-container">
+            <!-- दर्जागत बिदामा रहेका कर्मचारीहरूको सारांश टेबल -->
+            <div class="table-container" style="border-top-color: var(--police-blue);">
+                <h3 style="font-size: 15px; margin-bottom: 5px;">दर्जागत रूपमा हाल बिदामा रहेका संख्या</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>प्रउ</th>
+                            <th>प्रनाउ</th>
+                            <th>प्रनि</th>
+                            <th>प्रवनानि</th>
+                            <th>प्रनानि</th>
+                            <th>प्रसनि</th>
+                            <th>प्रवह</th>
+                            <th>प्रह</th>
+                            <th>प्रसह</th>
+                            <th>प्रज</th>
+                            <th>प्रकास</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td id="sum_prou">0</td>
+                            <td id="sum_pranau">0</td>
+                            <td id="sum_prani">0</td>
+                            <td id="sum_pravanani">0</td>
+                            <td id="sum_pranani">0</td>
+                            <td id="sum_prasani">0</td>
+                            <td id="sum_prabaha">0</td>
+                            <td id="sum_prah">0</td>
+                            <td id="sum_prasah">0</td>
+                            <td id="sum_praj">0</td>
+                            <td id="sum_prakas">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <h3 style="margin-top: 40px;">हाजिर भई फर्केका कर्मचारीहरूको सूची</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>कोड</th>
-                    <th>दर्जा</th>
-                    <th>नाम</th>
-                    <th>प्रकार</th>
-                    <th>सुरु मिति</th>
-                    <th>दिन</th>
-                    <th>कैफियत</th>
-                    <th>स्थिति</th>
-                </tr>
-            </thead>
-            <tbody id="returned_leaves_body">
-                <tr><td colspan="8">कुनै रेकर्ड छैन।</td></tr>
-            </tbody>
-        </table>
+            <div class="table-container" id="printable-active-list">
+                <h3>
+                    <span>हाल बिदामा रहेका प्रहरी कर्मचारीहरूको नामावली (<span id="active_count" style="color: #d9534f;">0</span> जना)</span>
+                    <button class="print-btn" onclick="window.print()">प्रिन्ट गर्नुहोस्</button>
+                </h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>कम्प्युटर कोड</th>
+                            <th>दर्जा</th>
+                            <th>नाम थर</th>
+                            <th>बिदाको किसिम</th>
+                            <th>सुरु मिति</th>
+                            <th>दिन</th>
+                            <th>हाजिर हुने मिति</th>
+                            <th class="action-col">हाजिर भएको (Mark Present)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="active_leaves_body">
+                        <tr>
+                            <td colspan="8">डाटा लोड हुँदैछ...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <div style="margin-top: 40px;">
-            <h3>कर्मचारी बिदाको इतिहास खोज्नुहोस्</h3>
-            <input type="text" placeholder="कम्प्युटर कोड वा नाम राख्नुहोस्..." oninput="fetchHistory(this.value)">
-            <div id="history_result" style="margin-top: 10px;"></div>
+            <div class="table-container" style="border-top-color: #28a745;">
+                <h3 style="color: #28a745;">
+                    <span>बिदाबाट हाजिर भई फर्केका प्रहरी कर्मचारीहरूको सूची</span>
+                </h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>कम्प्युटर कोड</th>
+                            <th>दर्जा</th>
+                            <th>नाम थर</th>
+                            <th>बिदाको किसिम</th>
+                            <th>सुरु मिति</th>
+                            <th>दिन</th>
+                            <th>कैफियत (Remarks)</th>
+                            <th>स्थिति</th>
+                        </tr>
+                    </thead>
+                    <tbody id="returned_leaves_body">
+                        <tr>
+                            <td colspan="8">डाटा लोड हुँदैछ...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="history-container">
+                <h3>कर्मचारी बिदाको इतिहास खोज्नुहोस्</h3>
+                <label>कम्प्युटर कोड राख्नुहोस्:</label>
+                <input type="text" id="search_code" placeholder="कोड हाल्नुहोस्..." onkeyup="fetchHistory(this.value)">
+                <div id="history_result" style="margin-top: 10px;"></div>
+            </div>
         </div>
     </div>
 
-    <!-- हाजिर गराउने मोडल -->
-    <div id="modal-overlay" style="display:none;">
-        <div class="modal-box">
-            <h3>कर्मचारी हाजिर गराउने</h3>
-            <p>कृपया कैफियत वा उपस्थितिको विवरण लेख्नुहोस्:</p>
-            <textarea id="modal_remarks" placeholder="समयमै हाजिर भएको..." rows="3" style="width:100%; margin-bottom:10px;"></textarea>
-            <button onclick="confirmMarkPresent()" style="background:#28a745;">हाजिर कन्फर्म गर्नुहोस्</button>
-            <button onclick="closeModal()" style="background:#6c757d; margin-top:5px;">रद्द गर्नुहोस्</button>
-        </div>
-    </div>
+    <footer>
+        Design & Developed By: <span>बैकुण्ठ सुवेदी</span>
+    </footer>
 
     <script>
-        const SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxglfVnEq7qJMhjyjuVMwkBpu8JabxSGxN57OWvMgiG_vzdUPipRh03caR3QOnrJO8/exec"; 
 
         const employeeDatabase = {
             "33223": { rank: "प्रउ", name: "तिलक भारती" },
@@ -599,7 +714,8 @@
     "558856": { rank: "प्रकास", name: "कम्मान सिंह विश्वकर्मा" },
     "558474": { rank: "प्रकास", name: "एलिसा राई" },
     "550287": { rank: "प्रकास", name: "राम बहादुर अधिकारी" }
-            // थप कर्मचारीहरू यहाँ थप्न सकिन्छ...
+    
+    
         };
 
         let leavesData = [];
@@ -676,25 +792,6 @@
             document.getElementById('bal_bhaipari').innerText = remBhaipari;
         }
 
-        // तोकिएको महिना अनुसार दिनहरूको म्यापिङ (वैशाख-३१, जेष्ठ-३१, असार-३२, श्रावण-३१, भाद्र-३२, असोज-३१, कार्तिक ३०, मंसिर-२9, पुस-३०, माघ-२9, फागुन-३०, चैत्र-३०)
-        function getDaysInMonth(year, month) {
-            const monthDays = {
-                1: 31, // वैशाख
-                2: 31, // जेष्ठ
-                3: 32, // असार
-                4: 31, // श्रावण
-                5: 32, // भाद्र
-                6: 31, // असोज
-                7: 30, // कार्तिक
-                8: 29, // मंसिर
-                9: 30, // पुस
-                10: 29, // माघ
-                11: 30, // फागुन
-                12: 30  // चैत्र
-            };
-            return monthDays[month] || 30;
-        }
-
         function calculateReturnDate(startDate, totalDays, publicHolidays) {
             if (!startDate) return "";
             let cleanDate = String(startDate).trim();
@@ -727,23 +824,22 @@
                 let totalLeaveSpan = daysNum + pubNum;
                 let targetDay = startDay + totalLeaveSpan; 
                 
-                // नयाँ महिना अनुसार दिन गणना गर्ने लुप
-                while (targetDay > getDaysInMonth(year, month)) {
-                    targetDay -= getDaysInMonth(year, month);
+                while (targetDay > 30) {
+                    targetDay -= 30;
                     month += 1;
-                    if (month > 12) {
-                        month = 1;
-                        year += 1;
-                    }
                 }
                 
                 while (targetDay <= 0) {
+                    targetDay += 30;
                     month -= 1;
-                    if (month < 1) {
-                        month = 12;
-                        year -= 1;
-                    }
-                    targetDay += getDaysInMonth(year, month);
+                }
+
+                if (month > 12) {
+                    month = 1;
+                    year += 1;
+                } else if (month < 1) {
+                    month = 12;
+                    year -= 1;
                 }
 
                 return `${year}/${String(month).padStart(2, '0')}/${String(targetDay).padStart(2, '0')}`;
@@ -872,20 +968,30 @@
         function formatDate(dateStr) {
             if (!dateStr) return '-';
             let str = String(dateStr).trim();
+            
             if (str.includes('T')) {
                 str = str.split('T')[0];
             }
+            
             let parts = str.split(/[\/-]/);
             if (parts.length === 3) {
                 if (parts[0].length === 4) {
-                    return `${parts[0]}/${parts[1].padStart(2, '0')}/${parts[2].padStart(2, '0')}`;
+                    let year = parts[0];
+                    let month = parts[1].padStart(2, '0');
+                    let day = parts[2].padStart(2, '0');
+                    return `${year}/${month}/${day}`;
                 } else if (parts[2].length === 4) {
-                    return `${parts[2]}/${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}`;
+                    let year = parts[2];
+                    let month = parts[0].padStart(2, '0');
+                    let day = parts[1].padStart(2, '0');
+                    return `${year}/${month}/${day}`;
                 }
             }
+            
             return str.replace(/-/g, '/');
         }
 
+        // मितिको आधारमा तुलना गर्न सहयोग गर्ने फङ्सन (YYYY/MM/DD वा YYYY-MM-DD लाई संख्यामा बदल्ने)
         function parseDateToComparableNumber(dateStr) {
             if (!dateStr) return 0;
             let cleanStr = String(dateStr).trim();
@@ -919,15 +1025,16 @@
             let activeList = leavesData.filter(item => String(item.status).trim() === 'Active');
             let returnedList = leavesData.filter(item => String(item.status).trim() === 'Returned');
             
-            // हाजिर हुने मिति (returnDate) अनुसार पुरानो मिति (अगाडिको मिति) भएकाहरूलाई माथि देखाउने गरी सर्ट (Sort) गर्ने व्यवस्था
+            // सुरु मिति (startDate) अनुसार पुरानो मितι (अगाडिको मिति) भएकाहरूलाई माथि देखाउने गरी सर्ट (Sort) गर्ने
             activeList.sort((a, b) => {
-                let dateA = parseDateToComparableNumber(a.returnDate);
-                let dateB = parseDateToComparableNumber(b.returnDate);
-                return dateA - dateB; 
+                let dateA = parseDateToComparableNumber(a.startDate);
+                let dateB = parseDateToComparableNumber(b.startDate);
+                return dateA - dateB; // सानो मिति (अगाडिको मिति) भए माथि आउनेछ
             });
 
             activeCount.innerText = activeList.length;
 
+            // दर्जागत गणना गर्ने (Rank-wise counting)
             let counts = { "प्रउ": 0, "प्रनाउ": 0, "प्रनि": 0, "प्रवनानि": 0, "प्रनानि": 0, "प्रसनि": 0, "प्रवह": 0, "प्रह": 0, "प्रसह": 0, "प्रज": 0, "प्रकास": 0 };
             
             activeList.forEach(item => {
