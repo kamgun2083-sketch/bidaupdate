@@ -1124,7 +1124,15 @@ while (targetDay > currentDaysInMonth) {
                 resultDiv.innerHTML = `<p style="font-size: 12px; color: #777;">यस कोडको कुनै बिदा इतिहास फेला परेन।</p>`;
             } else {
                 resultDiv.innerHTML = `<table>
-                    <thead><tr><th>किसिम</th><th>सुरु मिति</th><th>दिन</th><th>कैफियत</th><th>स्थिति</th></tr></thead>
+                   <thead>
+  <tr>
+    <th>किसिम</th>
+    <th>सुरु मिति</th>
+    <th>दिन</th>
+    <th>कैफियत</th>
+    <th>स्थिति</th>
+  </tr>
+</thead>
                     <tbody>
                         ${history.map(h => `<tr><td>${h.type}</td><td>${formatDate(h.startDate)}</td><td>${h.days}</td><td>${h.remarks || '-'}</td><td>${h.status === 'Active' ? 'बिदामा' : 'फर्केको'}</td></tr>`).join('')}
                     </tbody>
