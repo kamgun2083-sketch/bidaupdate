@@ -817,44 +817,30 @@
                 }
                 
                 let daysNum = parseInt(totalDays) || 0;
-let pubNum = parseInt(publicHolidays) || 0;
+                let pubNum = parseInt(publicHolidays) || 0;
+                
+                if (isNaN(year) || isNaN(month) || isNaN(startDay) || isNaN(daysNum)) return "";
 
-if (isNaN(year) || isNaN(month) || isNaN(startDay) || isNaN(daysNum)) return "";
+                let totalLeaveSpan = daysNum + pubNum;
+                let targetDay = startDay + totalLeaveSpan; 
+                
+                while (targetDay > 30) {
+                    targetDay -= 30;
+                    month += 1;
+                }
+                
+                while (targetDay <= 0) {
+                    targetDay += 30;
+                    month -= 1;
+                }
 
-let totalLeaveSpan = daysNum + pubNum;
-let targetDay = startDay + totalLeaveSpan; 
-
-// महिना अनुसार दिनहरू निकाल्ने फंक्सन (यसलाई कोडको सुरु वा बाहिर राख्नुहोला)
-function getDaysInMonth(y, m) {
-    const monthDays = {
-        1: 31, // वैशाख
-        2: 31, // जेष्ठ
-        3: 32, // असार
-        4: 31, // श्रावण
-        5: 32, // भाद्र
-        6: 31, // असोज
-        7: 30, // कार्तिक
-        8: 29, // मंसिर
-        9: 30, // पुस
-        10: 29, // माघ
-        11: 30, // फागुन
-        12: 30  // चैत्र
-    };
-    return monthDays[m] || 30;
-}
-
-// नयाँ लजिक यहाँ राखिएको छ:
-let currentDaysInMonth = getDaysInMonth(year, month);
-while (targetDay > currentDaysInMonth) {
-    targetDay -= currentDaysInMonth;
-    month += 1;
-    
-    if (month > 12) {
-        month = 1;
-        year += 1;
-    }
-    
-    
+                if (month > 12) {
+                    month = 1;
+                    year += 1;
+                } else if (month < 1) {
+                    month = 12;
+                    year -= 1;
+                }
 
                 return `${year}/${String(month).padStart(2, '0')}/${String(targetDay).padStart(2, '0')}`;
             }
@@ -1112,34 +1098,18 @@ while (targetDay > currentDaysInMonth) {
                 return;
             }
 
-      function fetchHistory(code) {
-            const resultDiv = document.getElementById('history_result');
-            if (!code) {
-                resultDiv.innerHTML = "";
-                return;
-            }
-
             const history = leavesData.filter(item => String(item.code).includes(code));
             if (history.length === 0) {
                 resultDiv.innerHTML = `<p style="font-size: 12px; color: #777;">यस कोडको कुनै बिदा इतिहास फेला परेन।</p>`;
             } else {
                 resultDiv.innerHTML = `<table>
-                   <thead>
-  <tr>
-    <th>किसिम</th>
-    <th>सुरु मिति</th>
-    <th>दिन</th>
-    <th>कैफियत</th>
-    <th>स्थिति</th>
-  </tr>
-</thead>
+                    <thead><tr><th>किसिम</th><th>सुरु मिति</th><th>दिन</th><th>कैफियत</th><th>स्थिति</th></tr></thead>
                     <tbody>
                         ${history.map(h => `<tr><td>${h.type}</td><td>${formatDate(h.startDate)}</td><td>${h.days}</td><td>${h.remarks || '-'}</td><td>${h.status === 'Active' ? 'बिदामा' : 'फर्केको'}</td></tr>`).join('')}
                     </tbody>
                 </table>`;
             }
-        } // <--- यो fetchHistory फंक्सन बन्द गर्ने ब्रॅकेट थप्नुहोला
-
+        }
     </script>
 </body>
 </html>
