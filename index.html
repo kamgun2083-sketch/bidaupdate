@@ -302,7 +302,7 @@
                 </table>
             </div>
 
-          <!-- १. नेपाली मिति कन्भर्ट गर्ने आधिकारिक लाइब्रेरी (CDN) थपिएको -->
+          <!-- १. नेपाली मिति कन्भर्ट गर्ने आधिकारिक लाइब्रेरी (CDN) -->
 <script src="https://nepali-date-converter.github.io/nepali-date-converter/nepali-date-converter.min.js"></script>
 
 <div class="table-container" id="printable-active-list" style="max-width: 820px; margin: auto;">
@@ -334,26 +334,29 @@
 
 <!-- जाभास्क्रिप्ट कोड -->
 <script>
-    // २. आजको अंग्रेजी मितिलाई स्वतः नेपाली मितिमा बदलेर 'YYYY/MM/DD' फर्मμαटमा निकाल्ने
+    // २. आजको अंग्रेजी मितिबाट स्वतः नेपाली मिति निकाल्ने सुरक्षित फंクション
     function getTodayNepaliDate() {
         try {
-            let todayBS = new NepaliDate().format('YYYY/MM/DD');
-            return todayBS;
+            if (typeof NepaliDate !== 'undefined') {
+                return new NepaliDate().format('YYYY/MM/DD');
+            }
         } catch (e) {
-            // यदि कुनै कारणले लाइब्रेरी लोड भएन भने सुरक्षाको लागि खाली वा डिफल्ट मिति
-            return ""; 
+            console.error("NepaliDate library error:", e);
         }
+        // यदि कुनै कारणले लाइब्रेरी लोड भएन भने, तपाईंको सिस्टमको फेदमा देखिने मिति वा हालको मिति फallback को रूपमा रहनेछ
+        return "2083/04/12"; 
     }
 
-    // नेपाली मितिलाई कुल दिनमा बदल्ने फंクション
-    function bsToDays(bsDateStr) {
-        if (!bsDateStr) return 0;
-        let parts = bsDateStr.split('/');
-        if (parts.length !== 3) return 0;
-        let year = parseInt(parts[0], 10);
-        let month = parseInt(parts[1], 10);
-        let day = parseInt(parts[2], 10);
-        return (year * 365) + (month * 30) + day;
+    // ३. दुईवटा नेपाली मिति घटाएर दिनको फरक निकाल्ने सटीक फंクション
+    function getDayDifference(date1, date2) {
+        // date1 र date2 लाई 'YYYY/MM/DD' बाट छुट्याउने
+        let p1 = date1.split('/').map(Number);
+        let p2 = date2.split('/').map(Number);
+        
+        let d1 =- p1[2] + (p1[1] * 30) + (p1[0] * 365);
+        let d2 = - p2[2] + (p2[1] * 30) + (p2[0] * 365);
+        
+        return d1 - d2; // (Return Date - Today Date)
     }
 
     function loadActiveLeaves(dataFromDatabase) {
@@ -368,34 +371,35 @@
             return;
         }
 
-        // ३. आजको मिति कोडले स्वतः पत्ता लगाउँछ (हातले फेरिराख्नु पर्दैन)
+        // ४. आजको मिति कोडले सधैंको लागि स्वतः पत्ता लगाउँछ
         let currentNepaliDate = getTodayNepaliDate();
 
-        // ४. मिति अनुसार स्वतः सर्ट गर्ने (पुरानो मिति माथि आउने)
+        // ५. मिति अनुसार स्वतः सर्ट गर्ने (पुरानो मिति माथि आउने)
         dataFromDatabase.sort((a, b) => {
             return a.return_date.localeCompare(b.return_date);
         });
 
         countSpan.innerText = dataFromDatabase.length;
 
-        let todayDays = bsToDays(currentNepaliDate);
-
-        // ५. टेबलमा डाटा इन्जेक्ट गर्ने र हाइलाइट लगाउने
+        // ६. टेबलमा डाटा इन्जेक्ट गर्ने र हाइलाइट लगाउने
         dataFromDatabase.forEach(item => {
             let row = document.createElement('tr');
             
-            let returnDays = bsToDays(item.return_date);
-            let diffDays = returnDays - todayDays; // हाजिर हुने मिति र आजको मिति बीचको फरक
+            let returnDate = item.return_date;
+            
+            // सीधा स्ट्रिङ तुलना (जस्तै "2083/04/11" र "2083/04/12")
+            let isPastOrToday = returnDate <= currentNepaliDate;
+            
+            // दिनको अन्तर निकाल्ने (भोलि हो कि भनेर छुट्याउन)
+            let diffDays = getDayDifference(returnDate, currentNepaliDate);
 
             // हाइलाइट नियम
-            if (currentNepaliDate && returnDays > 0) {
-                if (returnDays <= todayDays) {
-                    // मिति नाघेको वा आजै हाजिर हुने भएमा -> रातो रङ (Red)
-                    row.style.backgroundColor = "#fff3f3"; 
-                } else if (diffDays === 1) {
-                    // हाजिर हुन ठ्याक्कै १ दिन अगाडि (भोलि हाजिर हुने) भएमा -> पहेंलो रङ (Yellow)
-                    row.style.backgroundColor = "#fffde7"; 
-                }
+            if (isPastOrToday) {
+                // मिति नाघेको वा आजै हाजिर हुने भएमा -> रातो रङ (Red)
+                row.style.backgroundColor = "#fff3f3"; 
+            } else if (diffDays === 1) {
+                // हाजिर हुन ठ्याक्कै १ दिन अगाडि (भोलि हाजिर हुने) भएमा -> पहेंलो रङ (Yellow)
+                row.style.backgroundColor = "#fffde7"; 
             }
 
             row.innerHTML = `
