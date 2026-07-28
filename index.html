@@ -1112,6 +1112,13 @@ while (targetDay > currentDaysInMonth) {
                 return;
             }
 
+      function fetchHistory(code) {
+            const resultDiv = document.getElementById('history_result');
+            if (!code) {
+                resultDiv.innerHTML = "";
+                return;
+            }
+
             const history = leavesData.filter(item => String(item.code).includes(code));
             if (history.length === 0) {
                 resultDiv.innerHTML = `<p style="font-size: 12px; color: #777;">यस कोडको कुनै बिदा इतिहास फेला परेन।</p>`;
@@ -1123,7 +1130,8 @@ while (targetDay > currentDaysInMonth) {
                     </tbody>
                 </table>`;
             }
-        }
+        } // <--- यो fetchHistory फंक्सन बन्द गर्ने ब्रॅकेट थप्नुहोला
+
     </script>
 </body>
 </html>
