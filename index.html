@@ -303,31 +303,120 @@
             </div>
 
             <div class="table-container" id="printable-active-list">
-                <h3>
-                    <span>हाल बिदामा रहेका प्रहरी कर्मचारीहरूको नामावली (<span id="active_count" style="color: #d9534f;">0</span> जना)</span>
-                    <button class="print-btn" onclick="window.print()">प्रिन्ट गर्नुहोस्</button>
-                </h3>
+    <h3>
+        <span>हाल बिदामा रहेका प्रहरी कर्मचारीहरूको नामावली (<span id="active_count" style="color: #d9534f;">0</span> जना)</span>
+        <button class="print-btn" onclick="window.print()">प्रिन्ट गर्नुहोस्</button>
+    </h3>
+    
+    <table id="active_leaves_table">
+        <thead>
+            <tr>
+                <th>कम्प्युटर कोड</th>
+                <th>दर्जा</th>
+                <th>नाम थर</th>
+                <th>बिदाको किसिम</th>
+                <th>सुरु मिति</th>
+                <th>दिन</th>
+                <!-- हाजिर हुने मितिलाई sorting को लागि data attribute सहित मिलाइएको छ -->
+                <th onclick="sortTableByDate()" style="cursor: pointer;" title="क्लिक गरेर सर्ट गर्नुहोस्">हाजिर हुने मिति ⇅</th>
+                <th class="action-col">हाजिर भएको (Mark Present)</th>
+            </tr>
+        </thead>
+        <tbody id="active_leaves_body">
+            <tr>
+                <td colspan="8" style="text-align: center;">डाटा लोड हुँदैछ...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- आवश्यक జాवास्क्रिप्ट (JavaScript) कोड -->
+<script>
+    // उदाहरणको लागि डाटा लोड गर्ने र मितિ अनुसार स्वतः माथि ल्याउने फंクション
+    function loadActiveLeaves(dataFromDatabase) {
+        const tbody = document.getElementById('active_leaves_body');
+        const countSpan = document.getElementById('active_count');
+        
+        tbody.innerHTML = '';
+        
+        if (!dataFromDatabase || dataFromDatabase.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">कुनै डाटा फेलाεν परेन</td></tr>';
+            countSpan.innerText = '0';
+            return;
+        }
+
+        // १. हाजिर हुने मिति (Return Date) को आधारमा पुरानो (Ascending) मिति अनुसार सर्ट गर्ने
+        // यसले गर्दा सबैभन्दा पहिले हाजिर हुनुपर्ने वा पुराना मितिका कर्मचारीहरू स्वतः माथि आउँछन्।
+        dataFromDatabase.sort((a, b) => {
+            return new Date(a.return_date) - new Date(b.return_date);
+        });
+
+        countSpan.innerText = dataFromDatabase.length;
+
+        // २. टेबलमा डाटा इन्जेक्ट गर्ने
+        dataFromDatabase.forEach(item => {
+            let row = document.createElement('tr');
+            
+            // यदि हाजिर हुने मिति आज वा आजभन्दा पुरानो छ भने त्यस पङ्क्तिलाई भिन्नै रङले हाइलाइट गर्न सकिन्छ (ঐচ্ছिक)
+            let today = new Date().toISOString().split('T')[0];
+            let isOverdue = item.return_date <= today;
+            if(isOverdue) {
+                row.style.backgroundColor = "#fff3f3"; // हल्का रातो रङ पुरानो/नाघेको मिति देखाउन
+            }
+
+            row.innerHTML = `
+                <td>${item.computer_code}</td>
+                <td>${item.rank}</td>
+                <td>${item.full_name}</td>
+                <td>${item.leave_type}</td>
+                <td>${item.start_date}</td>
+                <td>${item.total_days}</td>
+                <td><strong>${item.return_date}</strong></td>
+                <td class="action-col">
+                    <button onclick="markPresent('${item.computer_code}')" class="present-btn">हाजिर गर्नुहोस्</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    // वैकल्पिक रूपमा प्रयोगकर्ताले क्लिक गरेर वा स्वतः टेबल सर्ट गर्न 
+    function sortTableByDate() {
+        let table = document.getElementById("active_leaves_table");
+        let switching = true;
+        let shouldSwitch, i, x, y;
+        
+        while (switching) {
+            switching = false;
+            let rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[6].innerText;
+                y = rows[i + 1].getElementsByTagName("TD")[6].innerText;
                 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>कम्प्युटर कोड</th>
-                            <th>दर्जा</th>
-                            <th>नाम थर</th>
-                            <th>बिदाको किसिम</th>
-                            <th>सुरु मिति</th>
-                            <th>दिन</th>
-                            <th>हाजिर हुने मिति</th>
-                            <th class="action-col">हाजिर भएको (Mark Present)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="active_leaves_body">
-                        <tr>
-                            <td colspan="8">डाटा लोड हुँदैछ...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                // पुरानो मिति माथि ल्याउन (Ascending Order)
+                if (x.toLowerCase() > y.toLowerCase()) {
+                    shouldSwitch = true;
+                    break;
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+            }
+        }
+    }
+
+    // टेस्टको लागि डमी डाटा (तपाईंले आफ्नो Database/API बाट आउने डाटा यहाँ राख्न सक्नुहुन्छ)
+    /*
+    const sampleData = [
+        { computer_code: "101", rank: "प्रनानि", full_name: "राम बहादुर", leave_type: "घरबिदा", start_date: "2026-07-01", total_days: 10, return_date: "2026-07-11" },
+        { computer_code: "102", rank: "प्रज", full_name: "श्याम मगर", leave_type: "καजुअल्", start_date: "2026-07-20", total_days: 5, return_date: "2026-07-25" },
+        { computer_code: "103", rank: "प्रनानि", full_name: "हरि दाहाल", leave_type: "बिरामी बिदा", start_date: "2026-06-15", total_days: 15, return_date: "2026-06-30" }
+    ];
+    loadActiveLeaves(sampleData);
+    */
+</script>
 
             <div class="table-container" style="border-top-color: #28a745;">
                 <h3 style="color: #28a745;">
