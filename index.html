@@ -302,7 +302,7 @@
                 </table>
             </div>
 
-           <div class="table-container" id="printable-active-list" style="max-width: 820px; margin: auto;">
+          <div class="table-container" id="printable-active-list" style="max-width: 820px; margin: auto;">
     <h3>
         <span>हाल बिदामा रहेका प्रहरी कर्मचारीहरूको नामावली (<span id="active_count" style="color: #d9534f;">0</span> जना)</span>
         <button class="print-btn" onclick="window.print()">प्रिन्ट गर्नुहोस्</button>
@@ -329,9 +329,12 @@
     </table>
 </div>
 
-<!-- जाभास्क्रिप्ट कोड -->
+<!-- जाभास्क्रिप्ट पूर्ण कोड -->
 <script>
-    // नेपाली मितिलाई कुल दिनमा बदल्ने सानो फंクション (यसले मिति तुलना गर्न सजिलो बनाउँछ)
+    // आजको वास्तविक नेपाली मिति (तपाईंको प्रणाली अनुसार हाललाई २०८३/०४/१२ सेट गरिएको छ)
+    const currentNepaliDate = "2083/04/12";
+
+    // नेपाली मितिलाई कुल दिनमा बदल्ने फंクション
     function bsToDays(bsDateStr) {
         if (!bsDateStr) return 0;
         let parts = bsDateStr.split('/');
@@ -339,11 +342,10 @@
         let year = parseInt(parts[0], 10);
         let month = parseInt(parts[1], 10);
         let day = parseInt(parts[2], 10);
-        // मोटामोटी हिसाबले दिनमा कन्भर्ट गर्ने (१ वर्ष = ३६५ दिन, १ महिना = ३० दिन मानेर)
         return (year * 365) + (month * 30) + day;
     }
 
-    function loadActiveLeaves(dataFromDatabase, currentNepaliDate) {
+    function loadActiveLeaves(dataFromDatabase) {
         const tbody = document.getElementById('active_leaves_body');
         const countSpan = document.getElementById('active_count');
         
@@ -355,7 +357,7 @@
             return;
         }
 
-        // १. मिति अनुसार स्वतः सर्ट गर्ने
+        // १. मिति अनुसार स्वतः सर्ट गर्ने (पुरानो मिति माथि आउने)
         dataFromDatabase.sort((a, b) => {
             return a.return_date.localeCompare(b.return_date);
         });
@@ -371,15 +373,13 @@
             let returnDays = bsToDays(item.return_date);
             let diffDays = returnDays - todayDays; // हाजिर हुने मिति र आजको मिति बीचको फरक
 
-            // हाइलाइट नियम:
-            if (currentNepaliDate) {
-                if (returnDays <= todayDays) {
-                    // मिति नाघेको वा आजै हाजिर हुने भएमा -> रातो रङ (Red)
-                    row.style.backgroundColor = "#fff3f3"; 
-                } else if (diffDays === 1) {
-                    // हाजिर हुनुभन्दा ठ ακ्याक्कै १ दिन अगाडि भएमा -> पहेंलो रङ (Yellow)
-                    row.style.backgroundColor = "#fffde7"; 
-                }
+            // हाइलाइट नियम
+            if (returnDays <= todayDays) {
+                // मिति नाघेको वा आजै हाजिर हुने भएमा -> रातो रङ (Red)
+                row.style.backgroundColor = "#fff3f3"; 
+            } else if (diffDays === 1) {
+                // हाजिर हुन ठ्याक्कै १ दिन अगाडि (भोलि हाजिर हुने) भएमा -> पहेंलो रङ (Yellow)
+                row.style.backgroundColor = "#fffde7"; 
             }
 
             row.innerHTML = `
