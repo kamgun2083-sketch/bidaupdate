@@ -385,7 +385,6 @@
         } catch (e) {
             console.error("NepaliDate library error:", e);
         }
-        // लाइब्रेरी उपलब्ध नभएमा English date बाट BS अनुमान गर्ने वैकल्पिक तरिका
         let today = new Date();
         return `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
     }
@@ -410,7 +409,6 @@
     function markPresent(computerCode) {
         if (confirm(`कम्प्युटर कोड नं. ${computerCode} लाई हाजिर गराउन चाहनुहुन्छ?`)) {
             alert(`कम्प्युटर कोड ${computerCode} सफलतापुर्वक हाजिर भयो।`);
-            // यहाँ backend API call (AJAX/Fetch) थप्न सक्नुहुन्छ।
         }
     }
 
@@ -439,8 +437,8 @@
             let returnDate = item.return_date;
             let diffDays = getDayDifference(returnDate, currentNepaliDate);
 
-            // रङ र सङ्केत मिलाउने
-            if (returnDate <= currentNepaliDate) {
+            // सुधार गरिएको रङ र सङ्केत मिलाउने लजिक (diffDays को आधारमा)
+            if (diffDays <= 0) {
                 // आज वा मिति नाघिसकेको -> हल्का रातो
                 row.style.backgroundColor = "#ffebee";
                 row.title = "हाजिर हुने मिति भइसकेको वा नाघेको";
@@ -492,10 +490,10 @@
     // नमूना डाटा (टेस्ट गर्नका लागि)
     document.addEventListener("DOMContentLoaded", function() {
         const sampleData = [
-            { computer_code: "43201", rank: "प्र.ह.", full_name: "राम बहादुर श्रेष्ठ", leave_type: "घर बिदा", start_date: "2081/04/01", total_days: 10, return_date: "2081/04/11" },
-            { computer_code: "45102", rank: "प्र.ज.", full_name: "श्याम प्रसाद चौधरी", leave_type: "बिरामी बिदा", start_date: "2081/04/05", total_days: 7, return_date: "2081/04/12" },
-            { computer_code: "39803", rank: "प्र.स.नि.", full_name: "हरी केसी", leave_type: "घर बिदा", start_date: "2081/04/02", total_days: 11, return_date: "2081/04/13" },
-            { computer_code: "41104", rank: "प्र.ना.नि.", full_name: "गीता थापा", leave_type: "विशेष बिदा", start_date: "2081/04/04", total_days: 15, return_date: "2081/04/19" }
+            { computer_code: "43201", rank: "प्र.ह.", full_name: "राम बहादुर श्रेष्ठ", leave_type: "घर बिदा", start_date: "2083/04/01", total_days: 10, return_date: "2083/04/11" },
+            { computer_code: "45102", rank: "प्र.ज.", full_name: "श्याम प्रसाद चौधरी", leave_type: "बिरामी बिदा", start_date: "2083/04/05", total_days: 7, return_date: "2083/04/13" },
+            { computer_code: "39803", rank: "प्र.स.नि.", full_name: "हरी केसी", leave_type: "घर बिदा", start_date: "2083/04/02", total_days: 11, return_date: "2083/04/14" },
+            { computer_code: "41104", rank: "प्र.ना.नि.", full_name: "गीता थापा", leave_type: "विशेष बिदा", start_date: "2083/04/04", total_days: 15, return_date: "2083/04/15" }
         ];
         
         loadActiveLeaves(sampleData);
