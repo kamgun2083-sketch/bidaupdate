@@ -302,83 +302,59 @@
                 </table>
             </div>
 
-        div class="table-container" id="printable-active-list">
-                <h3>
-                    <span>हाल बिदामा रहेका प्रहरी कर्मचारीहरूको नामावली (<span id="active_count" style="color: #d9534f;">0</span> जना)</span>
-                    <button class="print-btn" onclick="window.print()">प्रिन्ट गर्नुहोस्</button>
-                </h3>
-                
-                <table>
-                    <thead>
-                        <tr>
-                            <th>कम्प्युटर कोड</th>
-                            <th>दर्जा</th>
-                            <th>नाम थर</th>
-                            <th>बिदाको किसिम</th>
-                            <th>सुरु मिति</th>
-                            <th>दिन</th>
-                            <th>हाजिर हुने मिति</th>
-                            <th class="action-col">हाजिर भएको (Mark Present)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="active_leaves_body">
-                        <tr>
-                            <td colspan="8">डाटा लोड हुँदैछ...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <!-- हाल बिदामा रहेका प्रहरी कर्मचारीहरूको सूची -->
+<div class="table-container" id="printable-active-list">
+    <h3>
+        <span>हाल बिदामा रहेका प्रहरी कर्मचारीहरूको नामावली (<span id="active_count" style="color: #d9534f;">0</span> जना)</span>
+        <button class="print-btn" onclick="window.print()">प्रिन्ट गर्नुहोस्</button>
+    </h3>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>कम्प्युटर कोड</th>
+                <th>दर्जा</th>
+                <th>नाम थर</th>
+                <th>बिदाको किसिम</th>
+                <th>सुरु मिति</th>
+                <th>दिन</th>
+                <th>हाजिर हुने मिति</th>
+                <th class="action-col">हाजिर भएको (Mark Present)</th>
+            </tr>
+        </thead>
+        <tbody id="active_leaves_body">
+            <tr>
+                <td colspan="8">डाटा लोड हुँदैछ...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 
-            <div class="table-container" style="border-top-color: #28a745;">
-                <h3 style="color: #28a745;">
-                    <span>बिदाबाट हाजिर भई फर्केका प्रहरी कर्मचारीहरूको सूची</span>
-                </h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>कम्प्युटर कोड</th>
-                            <th>दर्जा</th>
-                            <th>नाम थर</th>
-                            <th>बिदाको किसिम</th>
-                            <th>सुरु मिति</th>
-                            <th>दिन</th>
-                            <th>कैफियत (Remarks)</th>
-                            <th>स्थिति</th>
-                        </tr>
-                    </thead>
-                    <tbody id="returned_leaves_body">
-                        <tr>
-                            <td colspan="8">डाटा लोड हुँदैछ...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="table-container" style="border-top-color: #28a745;">
-                <h3 style="color: #28a745;">
-                    <span>बिदाबाट हाजिर भई फर्केका प्रहरी कर्मचारीहरूको सूची</span>
-                </h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>कम्प्युटर कोड</th>
-                            <th>दर्जा</th>
-                            <th>नाम थर</th>
-                            <th>बिदाको किसिम</th>
-                            <th>सुरु मिति</th>
-                            <th>दिन</th>
-                            <th>कैफियत (Remarks)</th>
-                            <th>स्थिति</th>
-                        </tr>
-                    </thead>
-                    <tbody id="returned_leaves_body">
-                        <tr>
-                            <td colspan="8">डाटा लोड हुँदैछ...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
+<!-- बिदाबाट हाजिर भई फर्केका प्रहरी कर्मचारीहरूको सूची -->
+<div class="table-container" style="border-top-color: #28a745;">
+    <h3 style="color: #28a745;">
+        <span>बिदाबाट हाजिर भई फर्केका प्रहरी कर्मचारीहरूको सूची</span>
+    </h3>
+    <table>
+        <thead>
+            <tr>
+                <th>कम्प्युटर कोड</th>
+                <th>दर्जा</th>
+                <th>नाम थर</th>
+                <th>बिदाको किसिम</th>
+                <th>सुरु मिति</th>
+                <th>दिन</th>
+                <th>कैफियत (Remarks)</th>
+                <th>स्थिति</th>
+            </tr>
+        </thead>
+        <tbody id="returned_leaves_body">
+            <tr>
+                <td colspan="8">डाटा लोड हुँदैछ...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
             <div class="history-container">
                 <h3>कर्मचारी बिदाको इतिहास खोज्नुहोस्</h3>
                 <label>कम्प्युटर कोड राख्नुहोस्:</label>
