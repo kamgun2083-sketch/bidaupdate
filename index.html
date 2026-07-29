@@ -355,6 +355,78 @@
         </tbody>
     </table>
 </div>
+
+<!-- JavaScript कोड जसले क्रमबद्ध गर्ने र रङ्ग लगाउने काम गर्छ -->
+<script>
+    // नेपाली मितिहरू (जस्तै: २०८१/०४/१५ वा २०८१-०४-१५) तुलना गर्न र सर्ट गर्नको लागि
+    function sortAndHighlightActiveLeaves() {
+        const tbody = document.getElementById('active_leaves_body');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    // यदि डेटा लोड हुँदैछ वा खाली छ भने अगाडि नबढ्ने
+    if (rows.length === 0 || rows[0].querySelector('td').getAttribute('colspan')) {
+        return;
+    }
+
+    // हालको मिति प्राप्त गर्ने (तपाईँको प्रणालीमा यदि नेपाली मिति स्ट्रिङ छ भने यहाँ राख्नुहोला, 
+    // जस्तै: NepaliFunctions.GetCurrentBsDate() वा server बाट आएको मिति)
+    // उदाहरणका लागि हालको मितिलाई 'YYYY-MM-DD' वा 'YYYY/MM/DD' मा तुलना गरिन्छ:
+    const todayStr = getTodayNepaliDate(); 
+
+    // १. 'हाजिर हुने मिति' (Index 6) को आधारमा क्रमबद्ध (Sorting) गर्ने
+    rows.sort((rowA, rowB) => {
+        const dateA = rowA.cells[6].innerText.trim();
+        const dateB = rowB.cells[6].innerText.trim();
+        return dateA.localeCompare(dateB); // छिटो हाजिर हुने मिति माथि आउँछ
+    });
+
+    // टेबलको tbody खाली गरेर मिलाइएका पङ्क्तिहरू राख्ने र रङ्ग लगाउने
+    tbody.innerHTML = '';
+
+    rows.forEach(row => {
+        const returnDateStr = row.cells[6].innerText.trim();
+        
+        // मिति तुलना गरेर रङ्ग छुट्याउने लजिक
+        const status = compareNepaliDates(returnDateStr, todayStr);
+
+        if (status === 'overdue_or_today') {
+            row.style.backgroundColor = '#f2dede'; // हलुका रातो (Red) - मिति पुगेको वा नाघेको
+            row.style.color = '#a94442';
+        } else if (status === 'one_day_before') {
+            row.style.backgroundColor = '#fcf8e3'; // हलुका पँहेलो (Yellow) - हाजिर हुन १ दिन बाँकी
+            row.style.color = '#8a6d3b';
+        } else {
+            row.style.backgroundColor = ''; // सामान्य
+            row.style.color = '';
+        }
+
+        tbody.appendChild(row);
+    });
+}
+
+// मिति तुलना गर्ने फंक्सन (स्ट्रिङ वा Bikram Sambat तुलनाको लागि आधारभूत लजिक)
+function compareNepaliDates(targetDate, currentDate) {
+    // यदि तपाइँसँग 'NepaliFunctions' वा कुनै lib छ भने त्यसको प्रयोग गर्न सक्नुहुन्छ।
+    // यहाँ मानक स्ट्रिङ तुलना प्रयोग गरिएको छ (जसले 'YYYY-MM-DD' वा 'YYYY/MM/DD' फर्मատमा सहि काम गर्छ):
+    
+    if (targetDate < currentDate) {
+        return 'overdue_or_today'; // मिति नाघेको
+    } else if (targetDate === currentDate) {
+        return 'overdue_or_today'; // आजै हाजिर हुने दिन (रातो)
+    } else {
+        // १ दिन अगाडि हो कि भनेर जाँच गर्न सकिन्छ वा सामान्य अवस्था
+        // सरल हिसाबले स्ट्रिङ वा दिनको भिन्नता यहाँ राख्न सकिन्छ
+        return 'normal'; 
+    }
+}
+
+// आजको नेपाली मिति फिर्ता गर्ने फंक्सन (तपाईँको प्रणाली अनुसार परिवर्तन गर्न सकिने)
+function getTodayNepaliDate() {
+    // उदाहरणको लागि: प्रणालीमा प्रयोग भइरहेको मिति स्ट्रिङ यहाँ दिनुहोला
+    // यदि system मा JavaScript को Nepali date plugin छ भने त्यसको प्रयोग गर्नुहोस्।
+    return ""; 
+}
+</script>
             <div class="history-container">
                 <h3>कर्मचारी बिदाको इतिहास खोज्नुहोस्</h3>
                 <label>कम्प्युटर कोड राख्नुहोस्:</label>
