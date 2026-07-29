@@ -324,19 +324,28 @@
         return parseInt(cleanStr, 10) || 0;
     }
 
-    // दुई मितिबीचको अनुमानित दिनको फरक निकाल्ने सरल र भरपर्दो तरिका
+    // दुई मितिबीचको दिनको फरक निकाल्ने सुरक्षित र भरपर्दो फङ्क्सन
     function getDayDifferenceSimple(targetDateStr, todayDateStr) {
+        try {
+            if (typeof NepaliDate !== 'undefined') {
+                let d1 = new NepaliDate(targetDateStr);
+                let d2 = new NepaliDate(todayDateStr);
+                
+                if (d1 && d2 && typeof d1.toJsDate === 'function' && typeof d2.toJsDate === 'function') {
+                    let jsDate1 = d1.toJsDate();
+                    let jsDate2 = d2.toJsDate();
+                    if (!isNaN(jsDate1.getTime()) && !isNaN(jsDate2.getTime())) {
+                        let timeDiff = jsDate1.getTime() - jsDate2.getTime();
+                        return Math.round(timeDiff / (1000 * 3600 * 24));
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn("NepaliDate object calculation fallback:", e);
+        }
+
         let t1 = parseDateToNumber(targetDateStr);
         let t2 = parseDateToNumber(todayDateStr);
-        
-        // यदि मिति ठ्याक्कै एउटै भए ०, पछाडिको भए माइनस, अगाडिको भए प्लसमा दिन आउँछ
-        // यहाँ हामी साधारणतया स्ट्रिङ वा दिनको अनुमानित हिसाब गर्न सक्छौं
-        let d1 = new NepaliDate(targetDateStr);
-        let d2 = new NepaliDate(todayDateStr);
-        if (!isNaN(d1.toJsDate()) && !isNaN(d2.toJsDate())) {
-            let timeDiff = d1.toJsDate().getTime() - d2.toJsDate().getTime();
-            return Math.round(timeDiff / (1000 * 3600 * 24));
-        }
         return t1 - t2;
     }
 
@@ -347,11 +356,21 @@
         }
     }
 
+    // प्रिन्ट गर्ने फङ्क्सन
+    function printLeaveReport() {
+        window.print();
+    }
+
     // बिदाको डाटा लोड गर्ने र हाइलाइट गर्ने मुख्य फङ्क्सन
     function loadActiveLeaves(dataFromDatabase) {
         const tbody = document.getElementById('active_leaves_body');
         const countSpan = document.getElementById('active_count');
         
+        if (!tbody || !countSpan) {
+            console.error("Required DOM elements ('active_leaves_body' or 'active_count') not found!");
+            return;
+        }
+
         tbody.innerHTML = '';
         
         if (!dataFromDatabase || dataFromDatabase.length === 0) {
@@ -364,39 +383,39 @@
         let currentNum = parseDateToNumber(currentNepaliDate);
 
         // हाजिर हुने मिति (return_date) अनुसार स्वतः सर्ट गर्ने
-        dataFromDatabase.sort((a, b) => a.return_date.localeCompare(b.return_date));
+        dataFromDatabase.sort((a, b) => (a.return_date || '').localeCompare(b.return_date || ''));
 
         countSpan.innerText = dataFromDatabase.length;
 
         dataFromDatabase.forEach(item => {
             let row = document.createElement('tr');
-            let returnDate = item.return_date;
+            let returnDate = item.return_date || '';
             let returnNum = parseDateToNumber(returnDate);
             let diffDays = getDayDifferenceSimple(returnDate, currentNepaliDate);
 
             // पक्का रङ लगाउने कन्डिसन
             if (returnNum < currentNum || returnNum === currentNum) {
-                // मिति नाघिसकेको یا आजको मिति -> हल्का रातो
+                // मिति नाघिसकेको वा आजको मिति -> हल्का रातो
                 row.style.backgroundColor = "#ffebee";
                 row.title = "हाजिर हुने मिति भइसकेको वा नाघेको";
-            } else if (diffDays === 1 || (returnNum - currentNum === 1)) {
+            } else if (diffDays === 1) {
                 // भोलि हाजिर हुने -> हल्का पहेंलो
                 row.style.backgroundColor = "#fffde7";
                 row.title = "भोलि हाजिर हुनुपर्ने";
-            } else if (diffDays === 2 || (returnNum - currentNum === 2)) {
+            } else if (diffDays === 2) {
                 // पर्सि हाजिर हुने -> हल्का निलो
                 row.style.backgroundColor = "#e3f2fd";
                 row.title = "पर्सि हाजिर हुनुपर्ने";
             }
 
             row.innerHTML = `
-                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">${item.computer_code}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">${item.rank}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;"><strong>${item.full_name}</strong></td>
-                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">${item.leave_type}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">${item.start_date}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap; text-align: center;">${item.total_days} दिन</td>
-                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;"><strong>${item.return_date}</strong></td>
+                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">${item.computer_code || ''}</td>
+                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">${item.rank || ''}</td>
+                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;"><strong>${item.full_name || ''}</strong></td>
+                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">${item.leave_type || ''}</td>
+                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">${item.start_date || ''}</td>
+                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap; text-align: center;">${item.total_days || 0} दिन</td>
+                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;"><strong>${item.return_date || ''}</strong></td>
                 <td class="action-col" style="padding: 8px; border: 1px solid #ddd; white-space: nowrap; text-align: center;">
                     <button onclick="markPresent('${item.computer_code}')" class="present-btn">हाजिर गराउनुहोस्</button>
                 </td>
@@ -409,9 +428,11 @@
     let sortAscending = true;
     function sortTableByDate() {
         let tbody = document.getElementById("active_leaves_body");
+        if (!tbody) return;
+        
         let rows = Array.from(tbody.querySelectorAll("tr"));
 
-        if (rows.length <= 1 && rows[0].children.length === 1) return;
+        if (rows.length <= 1 && rows[0] && rows[0].children.length === 1) return;
 
         rows.sort((rowA, rowB) => {
             let cellA = rowA.children[6]?.innerText.trim() || '';
