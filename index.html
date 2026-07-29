@@ -356,76 +356,113 @@
     </table>
 </div>
 
-<!-- JavaScript कोड जसले क्रमबद्ध गर्ने र रङ्ग लगाउने काम गर्छ -->
+<!-- पूर्ण स्वचालित JavaScript कोड -->
 <script>
-    // नेपाली मितिहरू (जस्तै: २०८१/०४/१५ वा २०८१-०४-१५) तुलना गर्न र सर्ट गर्नको लागि
+    // १. मुख्य फंक्सन जसले क्रम मिलाउँछ र रङ्ग लगाउँछ
     function sortAndHighlightActiveLeaves() {
         const tbody = document.getElementById('active_leaves_body');
+        if (!tbody) return;
+        
         const rows = Array.from(tbody.querySelectorAll('tr'));
 
-    // यदि डेटा लोड हुँदैछ वा खाली छ भने अगाडि नबढ्ने
-    if (rows.length === 0 || rows[0].querySelector('td').getAttribute('colspan')) {
-        return;
-    }
-
-    // हालको मिति प्राप्त गर्ने (तपाईँको प्रणालीमा यदि नेपाली मिति स्ट्रिङ छ भने यहाँ राख्नुहोला, 
-    // जस्तै: NepaliFunctions.GetCurrentBsDate() वा server बाट आएको मिति)
-    // उदाहरणका लागि हालको मितिलाई 'YYYY-MM-DD' वा 'YYYY/MM/DD' मा तुलना गरिन्छ:
-    const todayStr = getTodayNepaliDate(); 
-
-    // १. 'हाजिर हुने मिति' (Index 6) को आधारमा क्रमबद्ध (Sorting) गर्ने
-    rows.sort((rowA, rowB) => {
-        const dateA = rowA.cells[6].innerText.trim();
-        const dateB = rowB.cells[6].innerText.trim();
-        return dateA.localeCompare(dateB); // छिटो हाजिर हुने मिति माथि आउँछ
-    });
-
-    // टेबलको tbody खाली गरेर मिलाइएका पङ्क्तिहरू राख्ने र रङ्ग लगाउने
-    tbody.innerHTML = '';
-
-    rows.forEach(row => {
-        const returnDateStr = row.cells[6].innerText.trim();
-        
-        // मिति तुलना गरेर रङ्ग छुट्याउने लजिक
-        const status = compareNepaliDates(returnDateStr, todayStr);
-
-        if (status === 'overdue_or_today') {
-            row.style.backgroundColor = '#f2dede'; // हलुका रातो (Red) - मिति पुगेको वा नाघेको
-            row.style.color = '#a94442';
-        } else if (status === 'one_day_before') {
-            row.style.backgroundColor = '#fcf8e3'; // हलुका पँहेलो (Yellow) - हाजिर हुन १ दिन बाँकी
-            row.style.color = '#8a6d3b';
-        } else {
-            row.style.backgroundColor = ''; // सामान्य
-            row.style.color = '';
+        // यदि डेटा लोड भएको छैन वा "डाटा लोड हुँदैछ..." छ भने रोक्ने
+        if (rows.length === 0 || (rows.length === 1 && rows[0].querySelector('td').getAttribute('colspan'))) {
+            return;
         }
 
-        tbody.appendChild(row);
-    });
-}
+        // आजको नेपाली मिति प्राप्त गर्ने (तपाईँको सिस्टममा भएको मिति इनपुट वा ग्लोबल भेरियबलबाट लिन सकिन्छ)
+        const todayStr = getTodayNepaliDate();
+        if (!todayStr) return;
 
-// मिति तुलना गर्ने फंक्सन (स्ट्रिङ वा Bikram Sambat तुलनाको लागि आधारभूत लजिक)
-function compareNepaliDates(targetDate, currentDate) {
-    // यदि तपाइँसँग 'NepaliFunctions' वा कुनै lib छ भने त्यसको प्रयोग गर्न सक्नुहुन्छ।
-    // यहाँ मानक स्ट्रिङ तुलना प्रयोग गरिएको छ (जसले 'YYYY-MM-DD' वा 'YYYY/MM/DD' फर्मատमा सहि काम गर्छ):
-    
-    if (targetDate < currentDate) {
-        return 'overdue_or_today'; // मिति नाघेको
-    } else if (targetDate === currentDate) {
-        return 'overdue_or_today'; // आजै हाजिर हुने दिन (रातो)
-    } else {
-        // १ दिन अगाडि हो कि भनेर जाँच गर्न सकिन्छ वा सामान्य अवस्था
-        // सरल हिसाबले स्ट्रिङ वा दिनको भिन्नता यहाँ राख्न सकिन्छ
-        return 'normal'; 
+        // २. 'हाजिर हुने मिति' (Index 6) को आधारमा क्रमबद्ध (Sorting) गर्ने (नजिकको मिति माथि)
+        rows.sort((rowA, rowB) => {
+            const dateA = rowA.cells[6].innerText.trim();
+            const dateB = rowB.cells[6].innerText.trim();
+            return dateA.localeCompare(dateB);
+        });
+
+        // ३. टेबलको tbody खाली गरेर मिलाइएका पङ्क्तिहरू राख्ने र रङ्ग लगाउने
+        tbody.innerHTML = '';
+
+        rows.forEach(row => {
+            const returnDateStr = row.cells[6].innerText.trim();
+            
+            // मिति तुलना गर्ने र रङ्ग छुटाउने
+            const status = compareNepaliDates(returnDateStr, todayStr);
+
+            if (status === 'overdue_or_today') {
+                row.style.backgroundColor = '#f2dede'; // हलुका रातो (मिति पुगेको वा नाघेको)
+                row.style.color = '#a94442';
+            } else if (status === 'one_day_before') {
+                row.style.backgroundColor = '#fcf8e3'; // हलुका पँहेलो (हाजिर हुन १ दिन बाँकी)
+                row.style.color = '#8a6d3b';
+            } else {
+                row.style.backgroundColor = ''; // सामान्य
+                row.style.color = '';
+            }
+
+            tbody.appendChild(row);
+        });
     }
-}
 
-// आजको नेपाली मिति फिर्ता गर्ने फंक्सन (तपाईँको प्रणाली अनुसार परिवर्तन गर्न सकिने)
-function getTodayNepaliDate() {
-    // उदाहरणको लागि: प्रणालीमा प्रयोग भइरहेको मिति स्ट्रिङ यहाँ दिनुहोला
-    // यदि system मा JavaScript को Nepali date plugin छ भने त्यसको प्रयोग गर्नुहोस्।
-    return ""; 
-}
+    // मिति तुलना गर्ने नियम
+    function compareNepaliDates(targetDate, currentDate) {
+        if (targetDate < currentDate) {
+            return 'overdue_or_today'; // मिति नाघेको
+        } else if (targetDate === currentDate) {
+            return 'overdue_or_today'; // आजै हाजिर हुने दिन (रातो)
+        } else {
+            // १ दिन अगाडि हो वाइनै जाँच गर्ने (यदि मिति 'YYYY-MM-DD' फर्म्याटमा छ भने दिनको गणितीय वा स्ट्रिङ भिन्नता)
+            // यहाँ सरल रूपमा अर्को मिति वा १ दिनको अन्तर पत्ता लगाउने लजिक राखिएको छ
+            const diff = getDayDifference(currentDate, targetDate);
+            if (diff === 1) {
+                return 'one_day_before'; // हाजिर हुन १ दिन अगाडि (पँहेलो)
+            }
+            return 'normal'; 
+        }
+    }
+
+    // दुई नेपाली मितिबीचको दिनको फरक निकाल्ने सामान्य फंक्सन
+    function getDayDifference(date1Str, date2Str) {
+        try {
+            const d1 = new Date(date1Str.replace(/-/g, '/'));
+            const d2 = new Date(date2Str.replace(/-/g, '/'));
+            const diffTime = d2 - d1;
+            return Math.round(diffTime / (1000 * 60 * 60 * 24));
+        } catch (e) {
+            return 99;
+        }
+    }
+
+    // आजको मिति तान्ने फंक्सन (तपाईँको पेजमा भएको मिति इनपुट वा सिस्टमको मितիबाट)
+    function getTodayNepaliDate() {
+        // यदि तपाईँको HTML मा मिति देखाउने कुनै element छ भने त्यसको ID यहाँ राख्नुहोला (जस्तै: document.getElementById('nepali_date').value)
+        // वा हालको सिस्टमको नेपाली मिति स्ट्रिङ यहाँ दिनुहोला:
+        
+        // उदाहरणका लागि, यदि कुनै element मा मिति छ भने:
+        const dateElement = document.getElementById('current_nepali_date'); // यदि छ भने
+        if (dateElement) return dateElement.value.trim();
+
+        // यदि छैन भने, JS ले नै निकालेको मिति वा हालको मिति स्ट्रिङ रिटर्न गर्न सक्नुहुन्छ
+        // (तपाईँको प्रणालीमा जुन format मा मिति देखिन्छ, जस्तै '2081-04-15' वा '२०८१-०४-१५')
+        return ""; 
+    }
+
+    // डेटा लोड भए नभएको स्वतः हेर्ने (MutationObserver) ताकि कोड आफैँ चलুক
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.target.id === 'active_leaves_body') {
+                sortAndHighlightActiveLeaves();
+            }
+        });
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const tbody = document.getElementById('active_leaves_body');
+        if (tbody) {
+            observer.observe(tbody, { childList: true, subtree: true });
+        }
+    });
 </script>
             <div class="history-container">
                 <h3>कर्मचारी बिदाको इतिहास खोज्नुहोस्</h3>
