@@ -302,79 +302,7 @@
                 </table>
             </div>
 
-         <!-- १. नेपाली मिति कन्भर्ट गर्ने CDN लाइब्रेरी -->
-<script src="https://cdn.jsdelivr.net/npm/nepali-date-converter/dist/nepali-date-converter.umd.js"></script>
-
-<style>
-    .table-container {
-        font-family: 'Mukta', 'Kalimati', Arial, sans-serif;
-    }
-    .print-btn {
-        background-color: #0275d8;
-        color: white;
-        border: none;
-        padding: 6px 14px;
-        border-radius: 4px;
-        cursor: pointer;
-        float: right;
-        font-size: 14px;
-    }
-    .print-btn:hover {
-        background-color: #025aa5;
-    }
-    .present-btn {
-        background-color: #5cb85c;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 3px;
-        cursor: pointer;
-        font-size: 12px;
-    }
-    .present-btn:hover {
-        background-color: #4cae4c;
-    }
-    
-    /* प्रिन्ट गर्दा अनावश्यक बटनहरू लुकाउन */
-    @media print {
-        .print-btn, .action-col {
-            display: none !important;
-        }
-        body {
-            background-color: #fff;
-        }
-    }
-</style>
-
-<div class="table-container" id="printable-active-list" style="max-width: 900px; margin: auto; padding: 15px;">
-    <h3>
-        <span>हाल बिदामा रहेका प्रहरी कर्मचारीहरूको नामावली (<span id="active_count" style="color: #d9534f;">०</span> जना)</span>
-        <button class="print-btn" onclick="window.print()">प्रिन्ट गर्नुहोस्</button>
-    </h3>
-    
-    <table id="active_leaves_table" style="width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 10px;">
-        <thead>
-            <tr style="background-color: #f2f2f2; text-align: left;">
-                <th style="padding: 8px; border: 1px solid #ddd;">कम्प्युटर कोड</th>
-                <th style="padding: 8px; border: 1px solid #ddd;">दर्जा</th>
-                <th style="padding: 8px; border: 1px solid #ddd;">नाम थर</th>
-                <th style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">बिदाको किसिम</th>
-                <th style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">सुरु मिति</th>
-                <th style="padding: 8px; border: 1px solid #ddd; white-space: nowrap; text-align: center;">दिन</th>
-                <th onclick="sortTableByDate()" style="cursor: pointer; padding: 8px; border: 1px solid #ddd; white-space: nowrap; background-color: #e9ecef;" title="क्लिक गरेर सर्ट गर्नुहोस्">हाजिर हुने मिति ⇅</th>
-                <th class="action-col" style="padding: 8px; border: 1px solid #ddd; white-space: nowrap; text-align: center;">हाजिर भएको (Mark Present)</th>
-            </tr>
-        </thead>
-        <tbody id="active_leaves_body">
-            <tr>
-                <td colspan="8" style="text-align: center; padding: 15px;">डाटा लोड हुँदैछ...</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-<!-- जाभास्क्रिप्ट कोड -->
-<script>
+        <script>
     // आजको नेपाली मिति निकाल्ने सुरक्षित फङ्क्सन
     function getTodayNepaliDate() {
         try {
@@ -389,20 +317,27 @@
         return `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
     }
 
-    // दुई नेपाली मितिहरू (YYYY/MM/DD) बीचको दिनको फरक पत्ता लगाउने
-    function getDayDifference(targetDateStr, todayDateStr) {
-        try {
-            if (typeof NepaliDate !== 'undefined') {
-                let d1 = new NepaliDate(targetDateStr);
-                let d2 = new NepaliDate(todayDateStr);
-                
-                let timeDiff = d1.toJsDate().getTime() - d2.toJsDate().getTime();
-                return Math.round(timeDiff / (1000 * 3600 * 24));
-            }
-        } catch(e) {
-            console.error("Error calculating date difference:", e);
+    // मिति तुलना गर्न सजिलो बनाउने फङ्क्सन (YYYY/MM/DD लाई YYYYMMDD नम्बरमा बदल्ने)
+    function parseDateToNumber(dateStr) {
+        if (!dateStr) return 0;
+        let cleanStr = dateStr.replace(/[^0-9]/g, '');
+        return parseInt(cleanStr, 10) || 0;
+    }
+
+    // दुई मितिबीचको अनुमानित दिनको फरक निकाल्ने सरल र भरपर्दो तरिका
+    function getDayDifferenceSimple(targetDateStr, todayDateStr) {
+        let t1 = parseDateToNumber(targetDateStr);
+        let t2 = parseDateToNumber(todayDateStr);
+        
+        // यदि मिति ठ्याक्कै एउटै भए ०, पछाडिको भए माइनस, अगाडिको भए प्लसमा दिन आउँछ
+        // यहाँ हामी साधारणतया स्ट्रिङ वा दिनको अनुमानित हिसाब गर्न सक्छौं
+        let d1 = new NepaliDate(targetDateStr);
+        let d2 = new NepaliDate(todayDateStr);
+        if (!isNaN(d1.toJsDate()) && !isNaN(d2.toJsDate())) {
+            let timeDiff = d1.toJsDate().getTime() - d2.toJsDate().getTime();
+            return Math.round(timeDiff / (1000 * 3600 * 24));
         }
-        return 0;
+        return t1 - t2;
     }
 
     // मार्क प्रिजेन्ट (हाजिर गराउने) फङ्क्सन
@@ -426,6 +361,7 @@
         }
 
         let currentNepaliDate = getTodayNepaliDate();
+        let currentNum = parseDateToNumber(currentNepaliDate);
 
         // हाजिर हुने मिति (return_date) अनुसार स्वतः सर्ट गर्ने
         dataFromDatabase.sort((a, b) => a.return_date.localeCompare(b.return_date));
@@ -435,18 +371,19 @@
         dataFromDatabase.forEach(item => {
             let row = document.createElement('tr');
             let returnDate = item.return_date;
-            let diffDays = getDayDifference(returnDate, currentNepaliDate);
+            let returnNum = parseDateToNumber(returnDate);
+            let diffDays = getDayDifferenceSimple(returnDate, currentNepaliDate);
 
-            // सुधार गरिएको रङ र सङ्केत मिलाउने लजिक (diffDays को आधारमा)
-            if (diffDays <= 0) {
-                // आज वा मिति नाघिसकेको -> हल्का रातो
+            // पक्का रङ लगाउने कन्डिसन
+            if (returnNum < currentNum || returnNum === currentNum) {
+                // मिति नाघिसकेको یا आजको मिति -> हल्का रातो
                 row.style.backgroundColor = "#ffebee";
                 row.title = "हाजिर हुने मिति भइसकेको वा नाघेको";
-            } else if (diffDays === 1) {
+            } else if (diffDays === 1 || (returnNum - currentNum === 1)) {
                 // भोलि हाजिर हुने -> हल्का पहेंलो
                 row.style.backgroundColor = "#fffde7";
                 row.title = "भोलि हाजिर हुनुपर्ने";
-            } else if (diffDays === 2) {
+            } else if (diffDays === 2 || (returnNum - currentNum === 2)) {
                 // पर्सि हाजिर हुने -> हल्का निलो
                 row.style.backgroundColor = "#e3f2fd";
                 row.title = "पर्सि हाजिर हुनुपर्ने";
@@ -486,18 +423,6 @@
         sortAscending = !sortAscending;
         rows.forEach(row => tbody.appendChild(row));
     }
-
-    // नमूना डाटा (टेस्ट गर्नका लागि)
-    document.addEventListener("DOMContentLoaded", function() {
-        const sampleData = [
-            { computer_code: "43201", rank: "प्र.ह.", full_name: "राम बहादुर श्रेष्ठ", leave_type: "घर बिदा", start_date: "2083/04/01", total_days: 10, return_date: "2083/04/11" },
-            { computer_code: "45102", rank: "प्र.ज.", full_name: "श्याम प्रसाद चौधरी", leave_type: "बिरामी बिदा", start_date: "2083/04/05", total_days: 7, return_date: "2083/04/13" },
-            { computer_code: "39803", rank: "प्र.स.नि.", full_name: "हरी केसी", leave_type: "घर बिदा", start_date: "2083/04/02", total_days: 11, return_date: "2083/04/14" },
-            { computer_code: "41104", rank: "प्र.ना.नि.", full_name: "गीता थापा", leave_type: "विशेष बिदा", start_date: "2083/04/04", total_days: 15, return_date: "2083/04/15" }
-        ];
-        
-        loadActiveLeaves(sampleData);
-    });
 </script>
 
             <div class="table-container" style="border-top-color: #28a745;">
