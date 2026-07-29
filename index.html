@@ -302,8 +302,37 @@
                 </table>
             </div>
 
-          <!-- १. नेपाली मिति कन्भर्ट गर्ने आधिकारिक लाइब्रेरी (CDN) -->
+         <!-- १. नेपाली मिति कन्भर्ट गर्ने आधिकारिक लाइब्रेरी (CDN) -->
 <script src="https://nepali-date-converter.github.io/nepali-date-converter/nepali-date-converter.min.js"></script>
+
+<style>
+    .print-btn {
+        background-color: #0275d8;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        float: right;
+    }
+    .present-btn {
+        background-color: #5cb85c;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    .present-btn:hover {
+        background-color: #4cae4c;
+    }
+    /* प्रिन्ट गर्दा बटनहरू लुकाउन */
+    @media print {
+        .print-btn, .action-col {
+            display: none !important;
+        }
+    }
+</style>
 
 <div class="table-container" id="printable-active-list" style="max-width: 820px; margin: auto;">
     <h3>
@@ -334,31 +363,36 @@
 
 <!-- जाभास्क्रिप्ट कोड -->
 <script>
-    // २. आजको अंग्रेजी मितिबाट स्वतः नेपाली मिति निकाल्ने सुरक्षित फंクション
+    // २. आजको नेपाली मिति निकालिने सुरक्षित फङ्क्सन
     function getTodayNepaliDate() {
         try {
             if (typeof NepaliDate !== 'undefined') {
-                return new NepaliDate().format('YYYY/MM/DD');
+                let npDate = new NepaliDate();
+                return npDate.format('YYYY/MM/DD');
             }
         } catch (e) {
             console.error("NepaliDate library error:", e);
         }
-        // यदि कुनै कारणले लाइब्रेरी लोड भएन भने, तपाईंको सिस्टमको फेदमा देखिने मिति वा हालको मिति फallback को रूपमा रहनेछ
-        return "2083/04/12"; 
+        return "2081/04/12"; // Fallback Example
     }
 
-    // ३. दुईवटा नेपाली मिति घटाएर दिनको फरक निकाल्ने सटीक फंクション
-    function getDayDifference(date1, date2) {
-        // date1 र date2 लाई 'YYYY/MM/DD' बाट छुट्याउने
-        let p1 = date1.split('/').map(Number);
-        let p2 = date2.split('/').map(Number);
-        
-        let d1 =- p1[2] + (p1[1] * 30) + (p1[0] * 365);
-        let d2 = - p2[2] + (p2[1] * 30) + (p2[0] * 365);
-        
-        return d1 - d2; // (Return Date - Today Date)
+    // ३. दुई नेपाली मितिहरू बीचको फरक (दिनमा) निकाल्ने फङ्क्सन
+    function getDayDifference(targetDateStr, todayDateStr) {
+        try {
+            if (typeof NepaliDate !== 'undefined') {
+                let d1 = new NepaliDate(targetDateStr);
+                let d2 = new NepaliDate(todayDateStr);
+                
+                let timeDiff = d1.toJsDate().getTime() - d2.toJsDate().getTime();
+                return Math.round(timeDiff / (1000 * 3600 * 24));
+            }
+        } catch(e) {
+            console.error("Error calculating date difference", e);
+        }
+        return 0;
     }
 
+    // ४. बिदाको डाटा लोड गर्ने र सर्ट/हाइलाइट गर्ने मुख्य फङ्क्सन
     function loadActiveLeaves(dataFromDatabase) {
         const tbody = document.getElementById('active_leaves_body');
         const countSpan = document.getElementById('active_count');
@@ -371,35 +405,37 @@
             return;
         }
 
-        // ४. आजको मिति कोडले सधैंको लागि स्वतः पत्ता लगाउँछ
+        // आजको अटोमेटिक नेपाली मिति
         let currentNepaliDate = getTodayNepaliDate();
 
-        // ५. मिति अनुसार स्वतः सर्ट गर्ने (पुरानो मिति माथि आउने)
+        // मिति अनुसार अटोमेटिक सर्ट गर्ने (सबैभन्दा अगाडि हाजिर हुनुपर्ने माथि आउने)
         dataFromDatabase.sort((a, b) => {
             return a.return_date.localeCompare(b.return_date);
         });
 
         countSpan.innerText = dataFromDatabase.length;
 
-        // ६. टेबलमा डाटा इन्जेक्ट गर्ने र हाइलाइट लगाउने
+        // रोहरू सिर्जना गर्ने र रङ लगाउने
         dataFromDatabase.forEach(item => {
             let row = document.createElement('tr');
-            
             let returnDate = item.return_date;
             
-            // सीधा स्ट्रिङ तुलना (जस्तै "2083/04/11" र "2083/04/12")
-            let isPastOrToday = returnDate <= currentNepaliDate;
-            
-            // दिनको अन्तर निकाल्ने (भोलि हो कि भनेर छुट्याउन)
+            // दिनको फरक पत्ता लगाउने
             let diffDays = getDayDifference(returnDate, currentNepaliDate);
 
-            // हाइलाइट नियम
-            if (isPastOrToday) {
-                // मिति नाघेको वा आजै हाजिर हुने भएमा -> रातो रङ (Red)
-                row.style.backgroundColor = "#fff3f3"; 
+            // हाइलाइट नियमहरू
+            if (returnDate <= currentNepaliDate) {
+                // आज वा आजभन्दा अगाडिको मिति नाघेको भए -> हल्का रातो
+                row.style.backgroundColor = "#ffebee";
+                row.title = "हाजिर हुने मिति भइसकेको वा नाघेको";
             } else if (diffDays === 1) {
-                // हाजिर हुन ठ्याक्कै १ दिन अगाडि (भोलि हाजिर हुने) भएमा -> पहेंलो रङ (Yellow)
-                row.style.backgroundColor = "#fffde7"; 
+                // भोलि हाजिर हुने भए -> हल्का पहेंलो
+                row.style.backgroundColor = "#fffde7";
+                row.title = "भोलि हाजिर हुनुपर्ने";
+            } else if (diffDays === 2) {
+                // पर्सि हाजिर हुने भए -> हल्का निलो
+                row.style.backgroundColor = "#e3f2fd";
+                row.title = "पर्सि हाजिर हुनुपर्ने";
             }
 
             row.innerHTML = `
@@ -418,31 +454,33 @@
         });
     }
 
-    // टेबल सर्ट गर्ने फंクション
+    // ५. तालिका हेडरमा क्लिक गर्दा सर्टिङ गर्ने फङ्क्सन
+    let sortAscending = true;
     function sortTableByDate() {
         let table = document.getElementById("active_leaves_table");
-        let switching = true;
-        let shouldSwitch, i, x, y;
-        
-        while (switching) {
-            switching = false;
-            let rows = table.rows;
-            for (i = 1; i < (rows.length - 1); i++) {
-                shouldSwitch = false;
-                x = rows[i].getElementsByTagName("TD")[6].innerText;
-                y = rows[i + 1].getElementsByTagName("TD")[6].innerText;
-                
-                if (x.localeCompare(y) > 0) {
-                    shouldSwitch = true;
-                    break;
-                }
-            }
-            if (shouldSwitch) {
-                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                switching = true;
-            }
-        }
+        let tbody = document.getElementById("active_leaves_body");
+        let rows = Array.from(tbody.querySelectorAll("tr"));
+
+        rows.sort((rowA, rowB) => {
+            let cellA = rowA.children[6]?.innerText.trim() || '';
+            let cellB = rowB.children[6]?.innerText.trim() || '';
+            
+            return sortAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+        });
+
+        sortAscending = !sortAscending;
+        rows.forEach(row => tbody.appendChild(row));
     }
+
+    // परीक्षणको लागि नमूना डाटा लोड (Sample Test Call)
+    /*
+    const sampleData = [
+        { computer_code: "101", rank: "प्र.ह.", full_name: "राम बहादुर", leave_type: "घर बिदा", start_date: "2081/04/01", total_days: 10, return_date: "2081/04/11" },
+        { computer_code: "102", rank: "प्र.ज.", full_name: "श्याम श्रेष्ठ", leave_type: "बिरामी बिदा", start_date: "2081/04/05", total_days: 7, return_date: "2081/04/12" },
+        { computer_code: "103", rank: "प्र.स.नि.", full_name: "हरी केसी", leave_type: "घर बिदा", start_date: "2081/04/02", total_days: 11, return_date: "2081/04/13" }
+    ];
+    loadActiveLeaves(sampleData);
+    */
 </script>
 
             <div class="table-container" style="border-top-color: #28a745;">
