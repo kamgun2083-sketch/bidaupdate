@@ -302,149 +302,57 @@
                 </table>
             </div>
 
-        <script>
-    // आजको नेपाली मिति निकाल्ने सुरक्षित फङ्क्सन
-    function getTodayNepaliDate() {
-        try {
-            if (typeof NepaliDate !== 'undefined') {
-                let npDate = new NepaliDate();
-                return npDate.format('YYYY/MM/DD');
-            }
-        } catch (e) {
-            console.error("NepaliDate library error:", e);
-        }
-        let today = new Date();
-        return `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
-    }
-
-    // मिति तुलना गर्न सजिलो बनाउने फङ्क्सन (YYYY/MM/DD लाई YYYYMMDD नम्बरमा बदल्ने)
-    function parseDateToNumber(dateStr) {
-        if (!dateStr) return 0;
-        let cleanStr = dateStr.replace(/[^0-9]/g, '');
-        return parseInt(cleanStr, 10) || 0;
-    }
-
-    // दुई मितिबीचको दिनको फरक निकाल्ने सुरक्षित र भरपर्दो फङ्क्सन
-    function getDayDifferenceSimple(targetDateStr, todayDateStr) {
-        try {
-            if (typeof NepaliDate !== 'undefined') {
-                let d1 = new NepaliDate(targetDateStr);
-                let d2 = new NepaliDate(todayDateStr);
+        div class="table-container" id="printable-active-list">
+                <h3>
+                    <span>हाल बिदामा रहेका प्रहरी कर्मचारीहरूको नामावली (<span id="active_count" style="color: #d9534f;">0</span> जना)</span>
+                    <button class="print-btn" onclick="window.print()">प्रिन्ट गर्नुहोस्</button>
+                </h3>
                 
-                if (d1 && d2 && typeof d1.toJsDate === 'function' && typeof d2.toJsDate === 'function') {
-                    let jsDate1 = d1.toJsDate();
-                    let jsDate2 = d2.toJsDate();
-                    if (!isNaN(jsDate1.getTime()) && !isNaN(jsDate2.getTime())) {
-                        let timeDiff = jsDate1.getTime() - jsDate2.getTime();
-                        return Math.round(timeDiff / (1000 * 3600 * 24));
-                    }
-                }
-            }
-        } catch (e) {
-            console.warn("NepaliDate object calculation fallback:", e);
-        }
+                <table>
+                    <thead>
+                        <tr>
+                            <th>कम्प्युटर कोड</th>
+                            <th>दर्जा</th>
+                            <th>नाम थर</th>
+                            <th>बिदाको किसिम</th>
+                            <th>सुरु मिति</th>
+                            <th>दिन</th>
+                            <th>हाजिर हुने मिति</th>
+                            <th class="action-col">हाजिर भएको (Mark Present)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="active_leaves_body">
+                        <tr>
+                            <td colspan="8">डाटा लोड हुँदैछ...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-        let t1 = parseDateToNumber(targetDateStr);
-        let t2 = parseDateToNumber(todayDateStr);
-        return t1 - t2;
-    }
-
-    // मार्क प्रिजेन्ट (हाजिर गराउने) फङ्क्सन
-    function markPresent(computerCode) {
-        if (confirm(`कम्प्युटर कोड नं. ${computerCode} लाई हाजिर गराउन चाहनुहुन्छ?`)) {
-            alert(`कम्प्युटर कोड ${computerCode} सफलतापुर्वक हाजिर भयो।`);
-        }
-    }
-
-    // प्रिन्ट गर्ने फङ्क्सन
-    function printLeaveReport() {
-        window.print();
-    }
-
-    // बिदाको डाटा लोड गर्ने र हाइलाइट गर्ने मुख्य फङ्क्सन
-    function loadActiveLeaves(dataFromDatabase) {
-        const tbody = document.getElementById('active_leaves_body');
-        const countSpan = document.getElementById('active_count');
-        
-        if (!tbody || !countSpan) {
-            console.error("Required DOM elements ('active_leaves_body' or 'active_count') not found!");
-            return;
-        }
-
-        tbody.innerHTML = '';
-        
-        if (!dataFromDatabase || dataFromDatabase.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 15px; color: #777;">हाल कुनै पनि प्रहरी कर्मचारी बिदामा हुनुहुन्न।</td></tr>';
-            countSpan.innerText = '0';
-            return;
-        }
-
-        let currentNepaliDate = getTodayNepaliDate();
-        let currentNum = parseDateToNumber(currentNepaliDate);
-
-        // हाजिर हुने मिति (return_date) अनुसार स्वतः सर्ट गर्ने
-        dataFromDatabase.sort((a, b) => (a.return_date || '').localeCompare(b.return_date || ''));
-
-        countSpan.innerText = dataFromDatabase.length;
-
-        dataFromDatabase.forEach(item => {
-            let row = document.createElement('tr');
-            let returnDate = item.return_date || '';
-            let returnNum = parseDateToNumber(returnDate);
-            let diffDays = getDayDifferenceSimple(returnDate, currentNepaliDate);
-
-            // पक्का रङ लगाउने कन्डिसन
-            if (returnNum < currentNum || returnNum === currentNum) {
-                // मिति नाघिसकेको वा आजको मिति -> हल्का रातो
-                row.style.backgroundColor = "#ffebee";
-                row.title = "हाजिर हुने मिति भइसकेको वा नाघेको";
-            } else if (diffDays === 1) {
-                // भोलि हाजिर हुने -> हल्का पहेंलो
-                row.style.backgroundColor = "#fffde7";
-                row.title = "भोलि हाजिर हुनुपर्ने";
-            } else if (diffDays === 2) {
-                // पर्सि हाजिर हुने -> हल्का निलो
-                row.style.backgroundColor = "#e3f2fd";
-                row.title = "पर्सि हाजिर हुनुपर्ने";
-            }
-
-            row.innerHTML = `
-                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">${item.computer_code || ''}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">${item.rank || ''}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;"><strong>${item.full_name || ''}</strong></td>
-                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">${item.leave_type || ''}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;">${item.start_date || ''}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap; text-align: center;">${item.total_days || 0} दिन</td>
-                <td style="padding: 8px; border: 1px solid #ddd; white-space: nowrap;"><strong>${item.return_date || ''}</strong></td>
-                <td class="action-col" style="padding: 8px; border: 1px solid #ddd; white-space: nowrap; text-align: center;">
-                    <button onclick="markPresent('${item.computer_code}')" class="present-btn">हाजिर गराउनुहोस्</button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-    }
-
-    // तालिका हेडरमा क्लिक गर्दा Ascending/Descending सर्ट गर्ने
-    let sortAscending = true;
-    function sortTableByDate() {
-        let tbody = document.getElementById("active_leaves_body");
-        if (!tbody) return;
-        
-        let rows = Array.from(tbody.querySelectorAll("tr"));
-
-        if (rows.length <= 1 && rows[0] && rows[0].children.length === 1) return;
-
-        rows.sort((rowA, rowB) => {
-            let cellA = rowA.children[6]?.innerText.trim() || '';
-            let cellB = rowB.children[6]?.innerText.trim() || '';
-            
-            return sortAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
-        });
-
-        sortAscending = !sortAscending;
-        rows.forEach(row => tbody.appendChild(row));
-    }
-</script>
+            <div class="table-container" style="border-top-color: #28a745;">
+                <h3 style="color: #28a745;">
+                    <span>बिदाबाट हाजिर भई फर्केका प्रहरी कर्मचारीहरूको सूची</span>
+                </h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>कम्प्युटर कोड</th>
+                            <th>दर्जा</th>
+                            <th>नाम थर</th>
+                            <th>बिदाको किसिम</th>
+                            <th>सुरु मिति</th>
+                            <th>दिन</th>
+                            <th>कैफियत (Remarks)</th>
+                            <th>स्थिति</th>
+                        </tr>
+                    </thead>
+                    <tbody id="returned_leaves_body">
+                        <tr>
+                            <td colspan="8">डाटा लोड हुँदैछ...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <div class="table-container" style="border-top-color: #28a745;">
                 <h3 style="color: #28a745;">
