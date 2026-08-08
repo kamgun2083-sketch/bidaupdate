@@ -29,8 +29,30 @@
             border-bottom: 4px solid var(--police-gold);
             justify-content: space-between;
         }
-        header div h1 { font-size: 20px; margin: 0; }
-        header div p { margin: 2px 0 0 0; font-size: 13px; color: #ccc; }
+        .header-logo img {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
+        }
+        .header-title {
+            text-align: center;
+            flex-grow: 1;
+            padding: 0 15px;
+        }
+        .header-title h1 { 
+            font-size: 20px; 
+            margin: 0; 
+        }
+        .header-title p { 
+            margin: 2px 0 0 0; 
+            font-size: 13px; 
+            color: #ccc; 
+        }
+        .header-flag img {
+            height: 60px;
+            width: auto;
+            object-fit: contain;
+        }
         .main-container {
             display: flex;
             justify-content: space-between;
@@ -243,9 +265,17 @@
     </div>
 
     <header>
-        <div>
+        <div class="header-logo">
+            <img src="my-logo.png" alt="Logo">
+        </div>
+
+        <div class="header-title">
             <h1>काठमाडौं उपत्यका प्रहरी सशस्त्र प्रहरी गण नं. २ महाराजगंज</h1>
             <p>प्रहरी कर्मचारी बिदा व्यवस्थापन प्रणाली (Cloud Connected)</p>
+        </div>
+
+        <div class="header-flag">
+            <img src="Animated-Flag-Nepal.png" alt="Nepal Flag">
         </div>
     </header>
 
