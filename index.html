@@ -1034,7 +1034,7 @@
             let codesWithLeaveSinceBaisakh = new Set();
 
             leavesData.forEach(item => {
-                let startDateStr = String(item.startDate).trim();
+                let startDateStr = normalizeSheetDate(item.startDate);
                 let compNum = parseDateToComparableNumber(startDateStr);
                 
                 if (compNum > 0) {
@@ -1121,13 +1121,32 @@
             }
         }
 
+        // Google Sheet बाट आएको मिति (जस्तै 2083-06-04T18:15:00.000Z) लाई नेपाल समय (UTC+5:45) मा
+        // बदलेर YYYY/MM/DD बनाउँछ। पहिले 'T' अगाडिको भाग मात्र लिँदा UTC को कारण १ दिन घटी आउँथ्यो।
+        function normalizeSheetDate(value) {
+            if (value === null || value === undefined) return '';
+            let str = String(value).trim();
+            if (!str) return '';
+
+            if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(str)) {
+                if (/(Z|[+-]\d{2}:?\d{2})$/i.test(str)) {
+                    const d = new Date(str);
+                    if (!isNaN(d.getTime())) {
+                        const np = new Date(d.getTime() + (5 * 60 + 45) * 60 * 1000);
+                        const y = np.getUTCFullYear();
+                        const m = String(np.getUTCMonth() + 1).padStart(2, '0');
+                        const day = String(np.getUTCDate()).padStart(2, '0');
+                        return `${y}/${m}/${day}`;
+                    }
+                }
+                return str.split('T')[0];
+            }
+            return str;
+        }
+
         function formatDate(dateStr) {
             if (!dateStr) return '-';
-            let str = String(dateStr).trim();
-            
-            if (str.includes('T')) {
-                str = str.split('T')[0];
-            }
+            let str = normalizeSheetDate(dateStr);
             
             let parts = str.split(/[\/-]/);
             if (parts.length === 3) {
@@ -1149,10 +1168,7 @@
 
         function parseDateToComparableNumber(dateStr) {
             if (!dateStr) return 0;
-            let cleanStr = String(dateStr).trim();
-            if (cleanStr.includes('T')) {
-                cleanStr = cleanStr.split('T')[0];
-            }
+            let cleanStr = normalizeSheetDate(dateStr);
             let parts = cleanStr.split(/[\/-]/);
             if (parts.length === 3) {
                 let y, m, d;
