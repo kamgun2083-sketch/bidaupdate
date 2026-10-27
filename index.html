@@ -171,7 +171,7 @@
         .login-box h2 { color: var(--police-blue); margin-top: 0; font-size: 18px; }
         .login-error { color: #d9534f; font-size: 12px; margin-top: 10px; display: none; }
 
-        #modal-overlay, #not-on-leave-modal, #add-employee-modal {
+        #modal-overlay, #not-on-leave-modal, #add-employee-modal, #transfer-modal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.5);
@@ -292,6 +292,25 @@
         </div>
     </div>
 
+    <!-- सरुवा भएका कर्मचारी हटाउने Modal -->
+    <div id="transfer-modal">
+        <div class="modal-box">
+            <h4>सरुवा भएका प्रहरी कर्मचारी हटाउने</h4>
+            <label>कम्प्युटर कोड / संकेत नं:</label>
+            <input type="text" id="tr_code" placeholder="जस्तै: 33223" onkeyup="previewTransferEmployee(this.value)">
+            <div id="tr_info" class="info"></div>
+            <label>सरुवा भएको मिति (वि.सं.):</label>
+            <input type="text" id="tr_date" placeholder="२०८३/०७/१०">
+            <label>सरुवा भएको कार्यालय / कैफियत:</label>
+            <input type="text" id="tr_remarks" placeholder="जस्तै: प्रदेश प्रहरी कार्यालय, पोखरा">
+            <button onclick="saveTransferEmployee()" style="background: #d9534f;">सूचीबाट हटाउनुहोस्</button>
+
+            <h4 style="margin-top: 20px;">हटाइएका (सरुवा भएका) कर्मचारीहरू</h4>
+            <div id="tr_list" style="max-height: 220px; overflow-y: auto;"></div>
+            <button onclick="closeTransferModal()" style="background: #6c757d; margin-top: 10px;">बन्द गर्ने</button>
+        </div>
+    </div>
+
     <header>
         <div class="header-logo">
             <img src="my-logo.png" alt="Logo">
@@ -361,6 +380,10 @@
 
             <div class="clickable-counter" onclick="openAddEmployeeModal()">
                 <span>नयाँ हाजिर भएका प्रहरी कर्मचारी थप्न क्लिक गर्नुहोस्</span>
+            </div>
+
+            <div class="clickable-counter" style="border-color: #d9534f; color: #b02a2a; background: #fdf0f0;" onclick="openTransferModal()">
+                <span>सरुवा भएका कर्मचारी हटाउन / सूची हेर्न क्लिक गर्नुहोस् (हटाइएका: <span id="transfer_count">0</span> जना)</span>
             </div>
 
             <!-- महिनागत बिदा विवरण (क्लिक गर्दा मात्र देखिने) -->
@@ -851,7 +874,7 @@
 
             if (user === "admin" && pass === "gun1234") {
                 document.getElementById('login-overlay').style.display = 'none';
-                loadExtraEmployees().then(loadDataFromSheet);
+                loadExtraEmployees().then(loadTransferred).then(loadDataFromSheet);
             } else {
                 document.getElementById('login_error').style.display = 'block';
             }
@@ -1269,6 +1292,174 @@
             showNoLeaveTable(customNoLeaveList);
         }
 
+        // ===== सरुवा भएका कर्मचारी हटाउने व्यवस्था =====
+        let transferredList = {};
+
+        function escHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        function updateTransferCounter() {
+            const el = document.getElementById('transfer_count');
+            if (el) el.innerText = Object.keys(transferredList).length;
+        }
+
+        // Google Sheet (Transferred ट्याब) बाट सरुवा भएकाहरूको कोड लिई employeeDatabase बाट हटाउँछ
+        function loadTransferred() {
+            return fetch(SCRIPT_URL + '?action=transferred&t=' + Date.now(), { cache: 'no-store' })
+                .then(r => r.json())
+                .then(list => {
+                    if (!Array.isArray(list)) return;
+                    transferredList = {};
+                    list.forEach(e => {
+                        // बिदाको रेकर्ड वा पुरानो Apps Script को जवाफलाई नमान्ने
+                        if (e && e.status === 'Transferred' && e.type === undefined) {
+                            const code = toEnglishDigits(String(e.code || '').trim());
+                            if (!code) return;
+                            transferredList[code] = {
+                                rank: String(e.rank || ''),
+                                name: String(e.name || ''),
+                                date: String(e.date || ''),
+                                remarks: String(e.remarks || '')
+                            };
+                            delete employeeDatabase[code];
+                        }
+                    });
+                    updateTransferCounter();
+                    renderTables();
+                })
+                .catch(error => console.error('Error loading transferred employees:', error));
+        }
+
+        function openTransferModal() {
+            document.getElementById('tr_code').value = '';
+            document.getElementById('tr_date').value = '';
+            document.getElementById('tr_remarks').value = '';
+            document.getElementById('tr_info').innerText = '';
+            renderTransferList();
+            document.getElementById('transfer-modal').style.display = 'flex';
+        }
+
+        function closeTransferModal() {
+            document.getElementById('transfer-modal').style.display = 'none';
+        }
+
+        function previewTransferEmployee(code) {
+            code = toEnglishDigits(String(code).trim());
+            const info = document.getElementById('tr_info');
+            if (employeeDatabase[code]) {
+                info.style.color = '#28a745';
+                info.innerText = employeeDatabase[code].rank + ' ' + employeeDatabase[code].name;
+            } else if (transferredList[code]) {
+                info.style.color = '#d9534f';
+                info.innerText = 'यो कर्मचारी पहिल्यै हटाइसकिएको छ।';
+            } else {
+                info.style.color = '#d9534f';
+                info.innerText = code ? 'यो कोड भएको कर्मचारी भेटिएन!' : '';
+            }
+        }
+
+        function renderTransferList() {
+            const box = document.getElementById('tr_list');
+            const codes = Object.keys(transferredList);
+            if (codes.length === 0) {
+                box.innerHTML = '<p style="font-size: 12px; color: #777;">हाल कुनै कर्मचारी हटाइएको छैन।</p>';
+                return;
+            }
+            box.innerHTML = '<table><thead><tr><th>कोड</th><th>दर्जा</th><th>नाम थर</th><th>मिति / कैफियत</th><th></th></tr></thead><tbody>' +
+                codes.map(c => {
+                    const t = transferredList[c];
+                    const d = t.date ? normalizeSheetDate(t.date) : '';
+                    return `<tr><td>${escHtml(c)}</td><td>${escHtml(t.rank)}</td><td>${escHtml(t.name)}</td>` +
+                        `<td>${escHtml(d)} ${escHtml(t.remarks)}</td>` +
+                        `<td><button onclick="restoreEmployee('${escHtml(c)}')" style="margin:0; padding:4px 8px; width:auto; font-size:11px; background:#28a745;">फिर्ता ल्याउने</button></td></tr>`;
+                }).join('') + '</tbody></table>';
+        }
+
+        // Sheet मा सरुवा/फिर्ताको अवस्था पुष्टि गर्ने (३ पटकसम्म जाँच्छ)
+        function verifyTransferState(code, shouldBeTransferred, onOk, attempt) {
+            fetch(SCRIPT_URL + '?action=transferred&t=' + Date.now(), { cache: 'no-store' })
+                .then(r => r.json())
+                .then(list => {
+                    const found = Array.isArray(list) && list.some(e =>
+                        e && e.status === 'Transferred' && e.type === undefined && toEnglishDigits(String(e.code).trim()) === code);
+                    if (found === shouldBeTransferred) { onOk(); }
+                    else if (attempt < 3) { setTimeout(() => verifyTransferState(code, shouldBeTransferred, onOk, attempt + 1), 4000); }
+                    else {
+                        alert('चेतावनी: परिवर्तन यही पेजमा मात्र देखियो, Google Sheet मा सुरक्षित भएन।\n' +
+                              'Apps Script मा "Transferred" को कोड थपेर Deploy → Manage deployments → Edit → New version गर्नुहोस्।');
+                    }
+                })
+                .catch(() => {
+                    if (attempt < 3) setTimeout(() => verifyTransferState(code, shouldBeTransferred, onOk, attempt + 1), 4000);
+                    else alert('Google Sheet मा सुरक्षित भयो कि भएन जाँच्न सकिएन। इन्टरनेट जाँच्नुहोस्।');
+                });
+        }
+
+        function saveTransferEmployee() {
+            const code = toEnglishDigits(document.getElementById('tr_code').value.trim());
+            const date = toEnglishDigits(document.getElementById('tr_date').value.trim());
+            const remarks = document.getElementById('tr_remarks').value.trim();
+            const emp = employeeDatabase[code];
+
+            if (!emp) { alert('यो कोड भएको कर्मचारी भेटिएन वा पहिल्यै हटाइसकिएको छ!'); return; }
+
+            const onLeave = leavesData.some(i => String(i.code) === code && String(i.status).trim() === 'Active');
+            let msg = emp.rank + ' ' + emp.name + ' (' + code + ') लाई सूचीबाट हटाउने?';
+            if (onLeave) msg += '\n\nसूचना: यिनको बिदा अझै "Active" छ। पहिले हाजिर गराउनु उपयुक्त हुन्छ।';
+            msg += '\n\n(पुरानो बिदा रेकर्ड भने मेटिँदैन।)';
+            if (!confirm(msg)) return;
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'transferEmployee', employee: { code: code, rank: emp.rank, name: emp.name, date: date, remarks: remarks } })
+            })
+            .then(() => {
+                transferredList[code] = { rank: emp.rank, name: emp.name, date: date, remarks: remarks };
+                delete employeeDatabase[code];
+                updateTransferCounter();
+                renderTransferList();
+                renderTables();
+                document.getElementById('tr_code').value = '';
+                document.getElementById('tr_info').innerText = '';
+                setTimeout(() => verifyTransferState(code, true,
+                    () => alert('सरुवा भएको कर्मचारी सूचीबाट हटाइयो र Google Sheet मा सुरक्षित भयो: ' + emp.name), 1), 3000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('कर्मचारी हटाउन असफल भयो!');
+            });
+        }
+
+        function restoreEmployee(code) {
+            const t = transferredList[code];
+            if (!t) return;
+            if (!confirm(t.rank + ' ' + t.name + ' लाई फेरि सक्रिय सूचीमा ल्याउने?')) return;
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'restoreEmployee', code: code })
+            })
+            .then(() => {
+                employeeDatabase[code] = { rank: t.rank, name: t.name };
+                delete transferredList[code];
+                updateTransferCounter();
+                renderTransferList();
+                renderTables();
+                setTimeout(() => verifyTransferState(code, false,
+                    () => alert('कर्मचारी फेरि सक्रिय सूचीमा आयो: ' + t.name), 1), 3000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('फिर्ता ल्याउन असफल भयो!');
+            });
+        }
+        // ===== /सरुवा व्यवस्था =====
+
         function openAddEmployeeModal() {
             document.getElementById('new_emp_code').value = '';
             document.getElementById('new_emp_name').value = '';
@@ -1288,6 +1479,10 @@
             if (!name) { alert('नाम थर लेख्नुहोस्!'); return; }
             if (employeeDatabase[code]) {
                 alert('यो कोड पहिल्यै दर्ता भइसकेको छ: ' + employeeDatabase[code].name);
+                return;
+            }
+            if (transferredList[code]) {
+                alert('यो कर्मचारी सरुवा भएर हटाइएको छ: ' + transferredList[code].name + '\nफेरि ल्याउन "सरुवा भएका कर्मचारी हटाउन / सूची हेर्न" बाट "फिर्ता ल्याउने" थिच्नुहोस्।');
                 return;
             }
 
