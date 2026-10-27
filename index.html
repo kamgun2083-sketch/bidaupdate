@@ -924,7 +924,7 @@
         }
 
         function loadDataFromSheet() {
-            fetch(SCRIPT_URL)
+            return fetch(SCRIPT_URL)
                 .then(response => response.json())
                 .then(data => {
                     leavesData = data;
@@ -1122,7 +1122,20 @@
                 document.getElementById('submit_btn').disabled = false;
                 document.getElementById('loading-indicator').style.display = 'none';
                 
-                setTimeout(loadDataFromSheet, 1500);
+                // Google Sheet मा साँच्चै सेभ भयो कि भएन जाँचेर सन्देश देखाउने
+                const checkLeaveSaved = (attempt) => {
+                    loadDataFromSheet().then(() => {
+                        const saved = leavesData.some(item => String(item.id) === String(newLeave.id));
+                        if (saved) {
+                            alert('बिदा रेकर्ड सफलतापूर्वक सेभ भयो ✔\n' + newLeave.name + ' (' + newLeave.type + ', ' + newLeave.days + ' दिन)');
+                        } else if (attempt < 3) {
+                            setTimeout(() => checkLeaveSaved(attempt + 1), 3000);
+                        } else {
+                            alert('चेतावनी: बिदा रेकर्ड सेभ भएको पुष्टि भएन। इन्टरनेट जाँचेर पेज रिफ्रेस गरी सूचीमा छ/छैन हेर्नुहोस्।');
+                        }
+                    });
+                };
+                setTimeout(() => checkLeaveSaved(1), 1500);
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -1373,7 +1386,21 @@
                     body: JSON.stringify({ action: 'updateStatus', id: selectedLeaveId, remarks: remarks || 'समयमै हाजिर भएको' })
                 })
                 .then(() => {
-                    setTimeout(loadDataFromSheet, 1500);
+                    // हाजिर साँच्चै सेभ भयो कि भएन जाँचेर सन्देश देखाउने
+                    const presentId = selectedLeaveId;
+                    const checkPresentSaved = (attempt) => {
+                        loadDataFromSheet().then(() => {
+                            const rec = leavesData.find(item => String(item.id) === String(presentId));
+                            if (rec && String(rec.status).trim() === 'Returned') {
+                                alert('हाजिर सफलतापूर्वक सेभ भयो ✔\n' + rec.name);
+                            } else if (attempt < 3) {
+                                setTimeout(() => checkPresentSaved(attempt + 1), 3000);
+                            } else {
+                                alert('चेतावनी: हाजिर सेभ भएको पुष्टि भएन। इन्टरनेट जाँचेर पेज रिफ्रेस गरी हेर्नुहोस्।');
+                            }
+                        });
+                    };
+                    setTimeout(() => checkPresentSaved(1), 1500);
                 })
                 .catch(error => {
                     console.error('Error:', error);
