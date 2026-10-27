@@ -947,7 +947,7 @@
         }
 
         function loadDataFromSheet() {
-            return fetch(SCRIPT_URL)
+            return fetch(SCRIPT_URL + '?t=' + Date.now(), { cache: 'no-store' })
                 .then(response => response.json())
                 .then(data => {
                     leavesData = data;
@@ -1130,35 +1130,55 @@
                 status: 'Active'
             };
 
+            // जवाफ पढ्न मिल्ने गरी पठाउने (Apps Script ले error दियो भने देखाउन)
             fetch(SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors',
                 headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify({ action: 'save', leave: newLeave })
             })
-            .then(() => {
+            .then(r => r.text())
+            .then(txt => { try { return JSON.parse(txt); } catch (e) { return { status: 'unknown', raw: String(txt).slice(0, 300) }; } })
+            .catch(() => null)
+            .then((serverRes) => {
+                document.getElementById('submit_btn').disabled = false;
+                document.getElementById('loading-indicator').style.display = 'none';
+
+                if (serverRes && serverRes.status === 'error') {
+                    alert('Google Apps Script ले बिदा सेभ गर्न सकेन।\nकारण: ' + serverRes.message + '\n\n(यो सन्देश फोटो खिचेर पठाउनुहोस्।)');
+                    return;
+                }
+
                 document.getElementById('leaveForm').reset();
                 document.getElementById('rank').value = '';
                 document.getElementById('name').value = '';
                 document.getElementById('calculated_return_date').value = '';
                 document.getElementById('leave_balance_display').style.display = 'none';
-                document.getElementById('submit_btn').disabled = false;
-                document.getElementById('loading-indicator').style.display = 'none';
-                
+
                 // Google Sheet मा साँच्चै सेभ भयो कि भएन जाँचेर सन्देश देखाउने
+                const sameRecord = (item) =>
+                    String(item.id) === String(newLeave.id) ||
+                    (String(item.code) === String(newLeave.code) &&
+                     String(item.days) === String(newLeave.days) &&
+                     String(item.type).trim() === String(newLeave.type).trim() &&
+                     String(item.status).trim() === 'Active' &&
+                     String(normalizeSheetDate(item.startDate)).replace(/-/g, '/') === String(normalizeSheetDate(newLeave.startDate)).replace(/-/g, '/'));
+
                 const checkLeaveSaved = (attempt) => {
                     loadDataFromSheet().then(() => {
-                        const saved = leavesData.some(item => String(item.id) === String(newLeave.id));
+                        const saved = leavesData.some(sameRecord);
                         if (saved) {
                             alert('बिदा रेकर्ड सफलतापूर्वक सेभ भयो ✔\n' + newLeave.name + ' (' + newLeave.type + ', ' + newLeave.days + ' दिन)');
-                        } else if (attempt < 3) {
-                            setTimeout(() => checkLeaveSaved(attempt + 1), 3000);
+                        } else if (attempt < 6) {
+                            setTimeout(() => checkLeaveSaved(attempt + 1), 4000);
                         } else {
-                            alert('चेतावनी: बिदा रेकर्ड सेभ भएको पुष्टि भएन। इन्टरनेट जाँचेर पेज रिफ्रेस गरी सूचीमा छ/छैन हेर्नुहोस्।');
+                            let why = '';
+                            if (serverRes && serverRes.status === 'success') why = '\n\nApps Script ले "success" जवाफ दिएको छ तर रेकर्ड सूचीमा देखिएन। Sheet का स्तम्भ (header) जाँच्नुहोस्।';
+                            else if (!serverRes) why = '\n\nApps Script बाट जवाफ आएन (इन्टरनेट वा Deploy को समस्या हुन सक्छ)।';
+                            alert('चेतावनी: बिदा रेकर्ड सेभ भएको पुष्टि भएन। पेज रिफ्रेस गरी सूचीमा छ/छैन हेर्नुहोस्।' + why);
                         }
                     });
                 };
-                setTimeout(() => checkLeaveSaved(1), 1500);
+                setTimeout(() => checkLeaveSaved(1), 2000);
             })
             .catch(error => {
                 console.error('Error:', error);
