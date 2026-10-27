@@ -171,7 +171,7 @@
         .login-box h2 { color: var(--police-blue); margin-top: 0; font-size: 18px; }
         .login-error { color: #d9534f; font-size: 12px; margin-top: 10px; display: none; }
 
-        #modal-overlay, #not-on-leave-modal {
+        #modal-overlay, #not-on-leave-modal, #add-employee-modal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.5);
@@ -222,6 +222,7 @@
             .print-btn, .action-col { display: none !important; }
         }
     </style>
+
 </head>
 <body>
 
@@ -255,12 +256,39 @@
     <!-- बैशाखदेखि हालसम्म बिदा नबसेका कर्मचारीहरूको सूची देखाउने Modal -->
     <div id="not-on-leave-modal">
         <div class="modal-box">
-            <h4>वैशाखदेखि हालसम्म कुनै पनि बिदा नबसेका कर्मचारीहरूको नामावली</h4>
+            <h4 id="not_on_leave_title">वैशाखदेखि हालसम्म कुनै पनि बिदा नबसेका कर्मचारीहरूको नामावली</h4>
             <div id="not_on_leave_content" style="margin-top: 10px; max-height: 300px; overflow-y: auto;">
                 <!-- Table will be injected here -->
             </div>
             <button onclick="downloadNotOnLeaveExcel()" style="background: #28a745; margin-top: 15px;">Excel डाउनलोड गर्नुहोस्</button>
             <button onclick="closeNotOnLeaveModal()" style="background: #6c757d; margin-top: 5px;">बन्द गर्ने</button>
+        </div>
+    </div>
+
+    <!-- नयाँ कर्मचारी थप्ने Modal -->
+    <div id="add-employee-modal">
+        <div class="modal-box" style="max-width: 350px;">
+            <h4>नयाँ हाजिर भएका प्रहरी कर्मचारी थप्ने</h4>
+            <label>कम्प्युटर कोड / संकेत नं:</label>
+            <input type="text" id="new_emp_code" placeholder="जस्तै: 497999">
+            <label>दर्जा:</label>
+            <select id="new_emp_rank">
+                <option value="प्रउ">प्रउ</option>
+                <option value="प्रनाउ">प्रनाउ</option>
+                <option value="प्रनि">प्रनि</option>
+                <option value="प्रवनानि">प्रवनानि</option>
+                <option value="प्रनानि">प्रनानि</option>
+                <option value="प्रसनि">प्रसनि</option>
+                <option value="प्रवह">प्रवह</option>
+                <option value="प्रह">प्रह</option>
+                <option value="प्रसह">प्रसह</option>
+                <option value="प्रज">प्रज</option>
+                <option value="प्रकास">प्रकास</option>
+            </select>
+            <label>नाम थर:</label>
+            <input type="text" id="new_emp_name" placeholder="पुरा नाम थर लेख्नुहोस्">
+            <button onclick="saveNewEmployee()">कर्मचारी थप्नुहोस्</button>
+            <button onclick="closeAddEmployeeModal()" style="background: #6c757d; margin-top: 5px;">बन्द गर्ने</button>
         </div>
     </div>
 
@@ -329,6 +357,21 @@
             <!-- बैशाखदेखि हालसम्म बिदा नबसेका कर्मचारीहरूको क्लिक गर्न मिल्ने बक्स -->
             <div class="clickable-counter" onclick="openNotOnLeaveModal()">
                 <span>वैशाखदेखि हालसम्म बिदा नबसेका कर्मचारी संख्या: <span id="not_on_leave_count" style="color: #d9534f; font-size: 16px;">0</span> जना (हेर्न क्लिक गर्नुहोस्)</span>
+            </div>
+
+            <div class="clickable-counter" onclick="openAddEmployeeModal()">
+                <span>नयाँ हाजिर भएका प्रहरी कर्मचारी थप्न क्लिक गर्नुहोस्</span>
+            </div>
+
+            <!-- महिनागत बिदा विवरण (क्लिक गर्दा मात्र देखिने) -->
+            <div class="clickable-counter" onclick="toggleMonthlySummary()">
+                <span>महिनागत बिदा विवरण (१ पटक / २ पटक / बिदा नबसेका) हेर्न क्लिक गर्नुहोस्</span>
+            </div>
+            <div class="table-container" id="monthly_summary_box" style="display: none; border-top-color: var(--police-blue);">
+                <h3 style="font-size: 15px; margin-bottom: 5px;">
+                    <span>महिनागत बिदा विवरण <span id="monthly_summary_year" style="color: #d9534f;"></span></span>
+                </h3>
+                <div id="monthly_summary_content"></div>
             </div>
 
             <!-- दर्जागत बिदामा रहेका कर्मचारीहरूको सारांश टेबल -->
@@ -437,6 +480,10 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxglfVnEq7qJMhjyjuVMwkBpu8JabxSGxN57OWvMgiG_vzdUPipRh03caR3QOnrJO8/exec"; 
+
+        // नयाँ हाजिर भएका कर्मचारीको विवरण राख्ने Google Sheet को "Publish to web" (CSV) लिङ्क यहाँ राख्नुहोस्।
+        // Sheet मा ३ वटा कोलम: कम्प्युटर कोड | दर्जा | नाम थर  (खाली राखे पुरानै सूचीले मात्र काम गर्छ)
+        const EMPLOYEE_SHEET_CSV_URL = "";
 
         const employeeDatabase = {
             "33223": { rank: "प्रउ", name: "तिलक भारती" },
@@ -804,10 +851,76 @@
 
             if (user === "admin" && pass === "gun1234") {
                 document.getElementById('login-overlay').style.display = 'none';
-                loadDataFromSheet();
+                loadExtraEmployees().then(loadDataFromSheet);
             } else {
                 document.getElementById('login_error').style.display = 'block';
             }
+        }
+
+        function toEnglishDigits(str) {
+            return String(str).replace(/[०-९]/g, d => "०१२३४५६७८९".indexOf(d));
+        }
+
+        function parseCSV(text) {
+            const rows = [];
+            let row = [], cur = '', inQ = false;
+            for (let i = 0; i < text.length; i++) {
+                const ch = text[i];
+                if (inQ) {
+                    if (ch === '"' && text[i + 1] === '"') { cur += '"'; i++; }
+                    else if (ch === '"') { inQ = false; }
+                    else { cur += ch; }
+                } else if (ch === '"') { inQ = true; }
+                else if (ch === ',') { row.push(cur); cur = ''; }
+                else if (ch === '\n' || ch === '\r') {
+                    if (ch === '\r' && text[i + 1] === '\n') i++;
+                    row.push(cur); cur = '';
+                    rows.push(row); row = [];
+                } else { cur += ch; }
+            }
+            if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+            return rows;
+        }
+
+        // बाहिरी Google Sheet बाट नयाँ कर्मचारीहरू लिएर employeeDatabase मा थप्छ
+        function loadEmployeesFromScript() {
+            return fetch(SCRIPT_URL + '?action=employees', { cache: 'no-store' })
+                .then(r => r.json())
+                .then(list => {
+                    if (!Array.isArray(list)) return;
+                    list.forEach(e => {
+                        // बिदाको रेकर्ड (type/status भएको) लाई कर्मचारी नमानी छोड्ने
+                        if (e && e.type === undefined && e.status === undefined) {
+                            const code = toEnglishDigits(String(e.code || '').trim());
+                            const rank = String(e.rank || '').trim();
+                            const name = String(e.name || '').trim();
+                            if (/^\d+$/.test(code) && rank && name) {
+                                employeeDatabase[code] = { rank: rank, name: name };
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading employees:', error));
+        }
+
+        function loadExtraEmployees() {
+            if (!EMPLOYEE_SHEET_CSV_URL) return loadEmployeesFromScript();
+            return fetch(EMPLOYEE_SHEET_CSV_URL, { cache: 'no-store' })
+                .then(r => r.text())
+                .then(text => {
+                    parseCSV(text).forEach(cols => {
+                        const code = toEnglishDigits((cols[0] || '').trim());
+                        const rank = (cols[1] || '').trim();
+                        const name = (cols[2] || '').trim();
+                        if (/^\d+$/.test(code) && rank && name) {
+                            employeeDatabase[code] = { rank: rank, name: name };
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading extra employees:', error);
+                })
+                .then(loadEmployeesFromScript);
         }
 
         function loadDataFromSheet() {
@@ -1061,7 +1174,131 @@
             return notOnLeaveList;
         }
 
+        const NEPALI_MONTH_NAMES = ["बैशाख", "जेष्ठ", "असार", "श्रावण", "भदौ", "असोज", "कार्तिक", "मंसिर", "पौष", "माघ", "फागुन", "चैत्र"];
+
+        function toggleMonthlySummary() {
+            const box = document.getElementById('monthly_summary_box');
+            box.style.display = (box.style.display === 'none') ? 'block' : 'none';
+        }
+
+        let monthlyNoLeaveLists = {};
+        let customNoLeaveList = null;
+        let customNoLeaveName = '';
+
+        function renderMonthlySummary() {
+            // प्रत्येक रेकर्डको (साल, महिना) निकाल्ने
+            let records = [];
+            let latestYear = 0;
+            leavesData.forEach(item => {
+                let str = toEnglishDigits(normalizeSheetDate(item.startDate));
+                let parts = str.split(/[\/-]/);
+                if (parts.length !== 3) return;
+                let y, m;
+                if (parts[0].length === 4) { y = parseInt(parts[0]); m = parseInt(parts[1]); }
+                else if (parts[2].length === 4) { y = parseInt(parts[2]); m = parseInt(parts[0]); }
+                else return;
+                if (!y || !m || m < 1 || m > 12) return;
+                records.push({ code: String(item.code), year: y, month: m });
+                if (y > latestYear) latestYear = y;
+            });
+
+            const totalEmployees = Object.keys(employeeDatabase).length;
+            let rowsHtml = '';
+            for (let m = 1; m <= 12; m++) {
+                let perCode = {};
+                records.forEach(r => {
+                    if (r.year === latestYear && r.month <= m && employeeDatabase[r.code]) {
+                        perCode[r.code] = (perCode[r.code] || 0) + 1;
+                    }
+                });
+                let one = 0, two = 0, three = 0;
+                Object.values(perCode).forEach(c => {
+                    if (c === 1) one++;
+                    else if (c === 2) two++;
+                    else if (c >= 3) three++;
+                });
+                monthlyNoLeaveLists[m] = [];
+                for (let code in employeeDatabase) {
+                    if (!perCode[code]) {
+                        monthlyNoLeaveLists[m].push({ code: code, rank: employeeDatabase[code].rank, name: employeeDatabase[code].name });
+                    }
+                }
+                let none = monthlyNoLeaveLists[m].length;
+                rowsHtml += `<tr><td>बैशाखदेखि ${NEPALI_MONTH_NAMES[m - 1]}सम्म</td><td>${one}</td><td>${two}</td><td>${three}</td><td onclick="openMonthNoLeaveModal(${m})" style="cursor:pointer; color:#d9534f; font-weight:bold; text-decoration:underline;" title="नामावली हेर्न क्लिक गर्नुहोस्">${none}</td></tr>`;
+            }
+
+            document.getElementById('monthly_summary_year').innerText = latestYear ? `(साल ${latestYear})` : '';
+            document.getElementById('monthly_summary_content').innerHTML = `<table>
+                <thead><tr><th>महिनासम्म (बैशाखदेखि)</th><th>१ पटक बिदा बसेका</th><th>२ पटक बिदा बसेका</th><th>३ वा सोभन्दा बढी पटक बिदा बसेका</th><th>बिदा नबसेका (नामावली हेर्न क्लिक)</th></tr></thead>
+                <tbody>${rowsHtml}</tbody>
+            </table>`;
+        }
+
+        function showNoLeaveTable(list) {
+            const contentDiv = document.getElementById('not_on_leave_content');
+            if (list.length === 0) {
+                contentDiv.innerHTML = `<p style="text-align:center; color:#777;">कुनै कर्मचारी भेटिएन।</p>`;
+            } else {
+                contentDiv.innerHTML = `<table>
+                    <thead><tr><th>कम्प्युटर कोड</th><th>दर्जा</th><th>नाम थर</th></tr></thead>
+                    <tbody>
+                        ${list.map(emp => `<tr><td>${emp.code}</td><td>${emp.rank}</td><td>${emp.name}</td></tr>`).join('')}
+                    </tbody>
+                </table>`;
+            }
+            document.getElementById('not-on-leave-modal').style.display = 'flex';
+        }
+
+        function openMonthNoLeaveModal(m) {
+            customNoLeaveList = monthlyNoLeaveLists[m] || [];
+            customNoLeaveName = `Not_On_Leave_Baisakh_to_${m}.csv`;
+            document.getElementById('not_on_leave_title').innerText = `बैशाखदेखि ${NEPALI_MONTH_NAMES[m - 1]}सम्म कुनै पनि बिदा नबसेका कर्मचारीहरूको नामावली (${customNoLeaveList.length} जना)`;
+            showNoLeaveTable(customNoLeaveList);
+        }
+
+        function openAddEmployeeModal() {
+            document.getElementById('new_emp_code').value = '';
+            document.getElementById('new_emp_name').value = '';
+            document.getElementById('add-employee-modal').style.display = 'flex';
+        }
+
+        function closeAddEmployeeModal() {
+            document.getElementById('add-employee-modal').style.display = 'none';
+        }
+
+        function saveNewEmployee() {
+            const code = toEnglishDigits(document.getElementById('new_emp_code').value.trim());
+            const rank = document.getElementById('new_emp_rank').value;
+            const name = document.getElementById('new_emp_name').value.trim();
+
+            if (!/^\d+$/.test(code)) { alert('कम्प्युटर कोडमा अङ्क मात्र हाल्नुहोस्!'); return; }
+            if (!name) { alert('नाम थर लेख्नुहोस्!'); return; }
+            if (employeeDatabase[code]) {
+                alert('यो कोड पहिल्यै दर्ता भइसकेको छ: ' + employeeDatabase[code].name);
+                return;
+            }
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'addEmployee', employee: { code: code, rank: rank, name: name } })
+            })
+            .then(() => {
+                employeeDatabase[code] = { rank: rank, name: name };
+                closeAddEmployeeModal();
+                renderTables();
+                alert('नयाँ कर्मचारी थपियो: ' + name);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('कर्मचारी थप्न असफल भयो!');
+            });
+        }
+
         function openNotOnLeaveModal() {
+            customNoLeaveList = null;
+            document.getElementById('not_on_leave_title').innerText = 'वैशाखदेखि हालसम्म कुनै पनि बिदा नबसेका कर्मचारीहरूको नामावली';
             const contentDiv = document.getElementById('not_on_leave_content');
             let notOnLeaveList = getEmployeesNotOnLeaveSinceBaisakh();
 
@@ -1083,7 +1320,7 @@
         }
 
         function downloadNotOnLeaveExcel() {
-            let notOnLeaveList = getEmployeesNotOnLeaveSinceBaisakh();
+            let notOnLeaveList = customNoLeaveList || getEmployeesNotOnLeaveSinceBaisakh();
 
             let csvContent = "\uFEFFकम्प्युटर कोड,दर्जा,नाम थर\n";
             notOnLeaveList.forEach(emp => {
@@ -1094,7 +1331,7 @@
             let url = URL.createObjectURL(blob);
             let a = document.createElement('a');
             a.href = url;
-            a.download = 'Employees_Not_On_Leave_Since_Baisakh.csv';
+            a.download = customNoLeaveList ? customNoLeaveName : 'Employees_Not_On_Leave_Since_Baisakh.csv';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1199,6 +1436,7 @@
             
             let notOnLeaveList = getEmployeesNotOnLeaveSinceBaisakh();
             notOnLeaveCount.innerText = notOnLeaveList.length;
+            renderMonthlySummary();
 
             activeList.sort((a, b) => {
                 let dateA = parseDateToComparableNumber(a.startDate);
