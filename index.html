@@ -1288,7 +1288,21 @@
                 employeeDatabase[code] = { rank: rank, name: name };
                 closeAddEmployeeModal();
                 renderTables();
-                alert('नयाँ कर्मचारी थपियो: ' + name);
+                // Google Sheet मा साँच्चै सुरक्षित भयो कि भएन जाँच्ने
+                setTimeout(() => {
+                    fetch(SCRIPT_URL + '?action=employees', { cache: 'no-store' })
+                        .then(r => r.json())
+                        .then(list => {
+                            const saved = Array.isArray(list) && list.some(e =>
+                                e && e.type === undefined && e.status === undefined && String(e.code) === code);
+                            if (saved) {
+                                alert('नयाँ कर्मचारी Google Sheet (Employees ट्याब) मा सुरक्षित भयो: ' + name);
+                            } else {
+                                alert('चेतावनी: ' + name + ' यही पेजमा मात्र अस्थायी रूपमा थपियो, Google Sheet मा सुरक्षित भएन।\nApps Script मा नयाँ कोड राखी Deploy → Manage deployments → Edit → New version गरेको छ/छैन जाँच्नुहोस्।');
+                            }
+                        })
+                        .catch(() => alert('Google Sheet मा सुरक्षित भयो कि भएन जाँच्न सकिएन। इन्टरनेट जाँच्नुहोस्।'));
+                }, 2500);
             })
             .catch(error => {
                 console.error('Error:', error);
