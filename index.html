@@ -1195,21 +1195,26 @@
         }
 
         function getEmployeesNotOnLeaveSinceBaisakh() {
-            let codesWithLeaveSinceBaisakh = new Set();
-
+            // बैशाख (महिना १) देखि हालसम्म — सबैभन्दा पछिल्लो साल (चालु आर्थिक वर्ष) का रेकर्ड मात्र गणना गर्ने
+            // (महिनागत विवरणको "बिदा नबसेका" सँग यो संख्या सधैं मिल्छ)
+            let records = [];
+            let latestYear = 0;
             leavesData.forEach(item => {
-                let startDateStr = normalizeSheetDate(item.startDate);
-                let compNum = parseDateToComparableNumber(startDateStr);
-                
-                if (compNum > 0) {
-                    let parts = startDateStr.split(/[\/-]/);
-                    if (parts.length === 3) {
-                        let m = (parts[0].length === 4) ? parseInt(parts[1]) : parseInt(parts[0]);
-                        if (m >= 4) {
-                            codesWithLeaveSinceBaisakh.add(String(item.code));
-                        }
-                    }
-                }
+                let str = toEnglishDigits(normalizeSheetDate(item.startDate));
+                let parts = str.split(/[\/-]/);
+                if (parts.length !== 3) return;
+                let y, m;
+                if (parts[0].length === 4) { y = parseInt(parts[0]); m = parseInt(parts[1]); }
+                else if (parts[2].length === 4) { y = parseInt(parts[2]); m = parseInt(parts[0]); }
+                else return;
+                if (!y || !m || m < 1 || m > 12) return;
+                records.push({ code: String(item.code), year: y });
+                if (y > latestYear) latestYear = y;
+            });
+
+            let codesWithLeaveSinceBaisakh = new Set();
+            records.forEach(r => {
+                if (r.year === latestYear) codesWithLeaveSinceBaisakh.add(r.code);
             });
 
             let notOnLeaveList = [];
