@@ -977,12 +977,37 @@
             }
         }
 
+        // बिदाको वार्षिक कोटा वि.सं. वर्ष (बैशाख–चैत्र) अनुसार गणना हुन्छ।
+        // बिदा सुरु मितिको साल हेरेर त्यही सालका बिदा मात्र गनिन्छ (अघिल्लो सालका गनिँदैनन्)।
+        function getLeaveYear(dateStr) {
+            if (!dateStr) return 0;
+            let str = toEnglishDigits(normalizeSheetDate(dateStr));
+            let parts = String(str).split(/[\/-]/);
+            if (parts.length !== 3) return 0;
+            let y = 0;
+            if (parts[0].length === 4) y = parseInt(parts[0]);
+            else if (parts[2].length === 4) y = parseInt(parts[2]);
+            return (y >= 2000 && y <= 2200) ? y : 0;
+        }
+
+        // फारमको सुरु मितिमा लेखिएको साल; मिति लेखिएको छैन भने आजको नेपाली साल
+        function getBalanceYear() {
+            const typed = getLeaveYear(document.getElementById('start_date').value);
+            if (typed) return typed;
+            const np = new Date(Date.now() + (5 * 60 + 45) * 60 * 1000);
+            let y = np.getUTCFullYear() + 57;
+            const mm = np.getUTCMonth() + 1, dd = np.getUTCDate();
+            if (mm > 4 || (mm === 4 && dd >= 14)) y -= 1;
+            return y;
+        }
+
         function updateLeaveBalance(code) {
             let usedGhar = 0;
             let usedBhaipari = 0;
+            const balanceYear = getBalanceYear();
 
             leavesData.forEach(item => {
-                if (String(item.code) === String(code)) {
+                if (String(item.code) === String(code) && getLeaveYear(item.startDate) === balanceYear) {
                     let days = parseInt(item.days) || 0;
                     if (String(item.type).trim() === "घर बिदा") {
                         usedGhar += days;
@@ -1028,11 +1053,6 @@
                 
                 if (isNaN(year) || isNaN(month) || isNaN(startDay) || isNaN(daysNum)) return "";
 
-                const nepaliMonthDays = {
-                    1: 31, 2: 31, 3: 32, 4: 31, 5: 29, 6: 31, 
-                    7: 30, 8: 29, 9: 30, 10: 29, 11: 30, 12: 30 
-                };
-
                 let totalLeaveSpan = daysNum + pubNum;
                 startDay += totalLeaveSpan; 
                 
@@ -1045,7 +1065,7 @@
                         year -= 1;
                     }
 
-                    let daysInCurrentMonth = nepaliMonthDays[month];
+                    let daysInCurrentMonth = getBSMonthDays(year, month);
 
                     if (startDay > daysInCurrentMonth) {
                         startDay -= daysInCurrentMonth;
@@ -1053,7 +1073,7 @@
                     } else if (startDay <= 0) {
                         month -= 1;
                         let prevMonth = (month < 1) ? 12 : month;
-                        startDay += nepaliMonthDays[prevMonth];
+                        startDay += getBSMonthDays(month < 1 ? year - 1 : year, prevMonth);
                     } else {
                         break;
                     }
@@ -1071,6 +1091,12 @@
 
             const returnDate = calculateReturnDate(startDate, totalDays, publicHolidays);
             document.getElementById('calculated_return_date').value = returnDate;
+
+            // सुरु मितिको साल बदलिँदा बाँकी बिदा पनि सोही साल अनुसार देखाउने
+            const currentCode = document.getElementById('computer_code').value;
+            if (currentCode && employeeDatabase[currentCode]) {
+                updateLeaveBalance(currentCode);
+            }
         }
 
         function saveLeaveRecord(event) {
@@ -1087,8 +1113,9 @@
 
             let usedGhar = 0;
             let usedBhaipari = 0;
+            const quotaYear = getBalanceYear();
             leavesData.forEach(item => {
-                if (String(item.code) === String(code)) {
+                if (String(item.code) === String(code) && getLeaveYear(item.startDate) === quotaYear) {
                     let d = parseInt(item.days) || 0;
                     if (String(item.type).trim() === "घर बिदा") usedGhar += d;
                     if (String(item.type).trim() === "भैपरी आउने बिदा") usedBhaipari += d;
@@ -1691,6 +1718,54 @@
             return 0;
         }
 
+        // ---- वि.सं. महिनाको वास्तविक दिन (पात्रो अनुसार, साल-साल फरक) ----
+        // बैशाख १ = 2026-04-14 (वि.सं. २०८३), २०८४ बैशाख १ = 2027-04-14
+        const BS_MONTH_DAYS = {
+            2083: [31, 31, 32, 31, 31, 31, 30, 29, 30, 29, 30, 30],
+            2084: [31, 31, 32, 31, 31, 30, 30, 30, 29, 30, 30, 30]
+        };
+        const BS_FIRST_YEAR = 2083;
+        const BS_FIRST_YEAR_START_UTC = Date.UTC(2026, 3, 14);
+        // तालिमा नभएका सालका लागि पुरानै सामान्य तालिका (पात्रो थपेपछि आफै सही हुन्छ)
+        const BS_DEFAULT_MONTH_DAYS = [31, 31, 32, 31, 29, 31, 30, 29, 30, 29, 30, 30];
+
+        function getBSMonthDays(year, month) {
+            const t = BS_MONTH_DAYS[year] || BS_DEFAULT_MONTH_DAYS;
+            return t[month - 1];
+        }
+
+        // ---- हाजिर हुने मिति नजिकिएको जनाउने (आजको नेपाली मिति पात्रो अनुसार) ----
+        // "भोलि" को नेपाली मितिलाई YYYYMMDD संख्या (जस्तै 20830715) मा फर्काउँछ।
+        // मिति तालिकाबाहिर परे 0 फर्काउँछ (त्यतिबेला कुनै हाइलाइट हुँदैन)।
+        function getTomorrowBSNumber(nowMs) {
+            const npNow = new Date((nowMs === undefined ? Date.now() : nowMs) + (5 * 60 + 45) * 60 * 1000);
+            const todayUTC = Date.UTC(npNow.getUTCFullYear(), npNow.getUTCMonth(), npNow.getUTCDate());
+            let dayIndex = Math.round((todayUTC - BS_FIRST_YEAR_START_UTC) / 86400000);
+            if (dayIndex < 0) return 0;
+
+            let year = BS_FIRST_YEAR;
+            while (BS_MONTH_DAYS[year]) {
+                const yearDays = BS_MONTH_DAYS[year].reduce((x, y) => x + y, 0);
+                if (dayIndex < yearDays) break;
+                dayIndex -= yearDays;
+                year++;
+            }
+            if (!BS_MONTH_DAYS[year]) return 0;
+
+            let month = 1;
+            while (month <= 12 && dayIndex >= getBSMonthDays(year, month)) {
+                dayIndex -= getBSMonthDays(year, month);
+                month++;
+            }
+            let day = dayIndex + 2; // आज + १ दिन = भोलि
+            if (day > getBSMonthDays(year, month)) {
+                day = 1;
+                month++;
+                if (month > 12) { month = 1; year++; }
+            }
+            return year * 10000 + month * 100 + day;
+        }
+
         function renderTables() {
             const activeBody = document.getElementById('active_leaves_body');
             const returnedBody = document.getElementById('returned_leaves_body');
@@ -1704,10 +1779,12 @@
             notOnLeaveCount.innerText = notOnLeaveList.length;
             renderMonthlySummary();
 
+            // हाजिर हुने मिति नजिकको कर्मचारी माथि आउने गरी क्रमबद्ध (मिति नभएका सबैभन्दा तल)
             activeList.sort((a, b) => {
-                let dateA = parseDateToComparableNumber(a.startDate);
-                let dateB = parseDateToComparableNumber(b.startDate);
-                return dateA - dateB;
+                let retA = parseDateToComparableNumber(a.returnDate) || 99999999;
+                let retB = parseDateToComparableNumber(b.returnDate) || 99999999;
+                if (retA !== retB) return retA - retB;
+                return parseDateToComparableNumber(a.startDate) - parseDateToComparableNumber(b.startDate);
             });
 
             activeCount.innerText = activeList.length;
@@ -1736,18 +1813,25 @@
             if (activeList.length === 0) {
                 activeBody.innerHTML = `<tr><td colspan="8">कुनै रेकर्ड फेला परेन।</td></tr>`;
             } else {
-                activeBody.innerHTML = activeList.map(item => `
+                const tomorrowNum = getTomorrowBSNumber();
+                activeBody.innerHTML = activeList.map(item => {
+                    // हाजिर हुने मितिभन्दा १ दिन अगाडिदेखि (हाजिर नगराउञ्जेल) नाम र हाजिर हुने मिति हाइलाइट हुने
+                    const retNum = parseDateToComparableNumber(item.returnDate);
+                    const due = tomorrowNum > 0 && retNum > 0 && retNum <= tomorrowNum;
+                    const hlStyle = 'background-color: #ffe066; -webkit-print-color-adjust: exact; print-color-adjust: exact;';
+                    return `
                     <tr>
                         <td>${item.code}</td>
                         <td>${item.rank}</td>
-                        <td>${item.name}</td>
+                        <td${due ? ` style="${hlStyle} font-weight: bold;"` : ''}>${item.name}</td>
                         <td>${item.type}</td>
                         <td>${formatDate(item.startDate)}</td>
                         <td>${item.days} दिन</td>
-                        <td style="font-weight: bold; color: #d9534f;">${formatDate(item.returnDate)}</td>
+                        <td style="font-weight: bold; color: #d9534f;${due ? ' ' + hlStyle : ''}">${formatDate(item.returnDate)}</td>
                         <td class="action-col"><button onclick="openModal(${item.id})" style="padding: 5px 10px; margin:0; background:#28a745;">हाजिर गराउने</button></td>
                     </tr>
-                `).join('');
+                `;
+                }).join('');
             }
 
             if (returnedList.length === 0) {
