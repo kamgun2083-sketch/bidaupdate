@@ -319,6 +319,7 @@
         <div class="header-title">
             <h1>काठमाडौं उपत्यका प्रहरी सशस्त्र प्रहरी गण नं. २ महाराजगंज</h1>
             <p>प्रहरी कर्मचारी बिदा व्यवस्थापन प्रणाली (Cloud Connected)</p>
+            <p id="nepali_datetime" style="color: var(--police-gold); font-weight: bold; font-size: 14px; margin-top: 4px;"></p>
         </div>
 
         <div class="header-flag">
@@ -1238,6 +1239,8 @@
                 records.push({ code: String(item.code), year: y });
                 if (y > latestYear) latestYear = y;
             });
+            // साल = आजको नेपाली साल (अर्को सालको बिदा दर्ता भए पनि तालिका बदलिँदैन)
+            latestYear = getCurrentBSYear() || latestYear;
 
             let codesWithLeaveSinceBaisakh = new Set();
             records.forEach(r => {
@@ -1284,6 +1287,8 @@
                 records.push({ code: String(item.code), year: y, month: m });
                 if (y > latestYear) latestYear = y;
             });
+            // साल = आजको नेपाली साल (अर्को सालको बिदा दर्ता भए पनि तालिका बदलिँदैन)
+            latestYear = getCurrentBSYear() || latestYear;
 
             const totalEmployees = Object.keys(employeeDatabase).length;
             let rowsHtml = '';
@@ -1734,6 +1739,22 @@
             return t[month - 1];
         }
 
+        // आजको नेपाली साल (तालिमा नभए 0 फर्काउँछ)
+        function getCurrentBSYear(nowMs) {
+            const npNow = new Date((nowMs === undefined ? Date.now() : nowMs) + (5 * 60 + 45) * 60 * 1000);
+            const todayUTC = Date.UTC(npNow.getUTCFullYear(), npNow.getUTCMonth(), npNow.getUTCDate());
+            let dayIndex = Math.round((todayUTC - BS_FIRST_YEAR_START_UTC) / 86400000);
+            if (dayIndex < 0) return 0;
+            let year = BS_FIRST_YEAR;
+            while (BS_MONTH_DAYS[year]) {
+                const yearDays = BS_MONTH_DAYS[year].reduce((x, y) => x + y, 0);
+                if (dayIndex < yearDays) return year;
+                dayIndex -= yearDays;
+                year++;
+            }
+            return 0;
+        }
+
         // ---- हाजिर हुने मिति नजिकिएको जनाउने (आजको नेपाली मिति पात्रो अनुसार) ----
         // "भोलि" को नेपाली मितिलाई YYYYMMDD संख्या (जस्तै 20830715) मा फर्काउँछ।
         // मिति तालिकाबाहिर परे 0 फर्काउँछ (त्यतिबेला कुनै हाइलाइट हुँदैन)।
@@ -1871,6 +1892,59 @@
                 </table>`;
             }
         }
+
+        // ---- आजको नेपाली मिति र समय (नेपाल समय UTC+5:45, वि.सं. पात्रो अनुसार, आफै अपडेट हुने) ----
+        const NEPALI_WEEKDAYS = ["आइतबार", "सोमबार", "मङ्गलबार", "बुधबार", "बिहीबार", "शुक्रबार", "शनिबार"];
+
+        function toNepaliNumerals(value) {
+            return String(value).replace(/[0-9]/g, d => "०१२३४५६७८९"[d]);
+        }
+
+        // वि.सं. मिति (साल, महिना, गते) निकाल्छ; तालिकाबाहिर परे null फर्काउँछ
+        function getTodayBS(nowMs) {
+            const npNow = new Date((nowMs === undefined ? Date.now() : nowMs) + (5 * 60 + 45) * 60 * 1000);
+            const todayUTC = Date.UTC(npNow.getUTCFullYear(), npNow.getUTCMonth(), npNow.getUTCDate());
+            let dayIndex = Math.round((todayUTC - BS_FIRST_YEAR_START_UTC) / 86400000);
+            if (dayIndex < 0) return null;
+            let year = BS_FIRST_YEAR;
+            while (BS_MONTH_DAYS[year]) {
+                const yearDays = BS_MONTH_DAYS[year].reduce((x, y) => x + y, 0);
+                if (dayIndex < yearDays) break;
+                dayIndex -= yearDays;
+                year++;
+            }
+            if (!BS_MONTH_DAYS[year]) return null;
+            let month = 1;
+            while (month <= 12 && dayIndex >= getBSMonthDays(year, month)) {
+                dayIndex -= getBSMonthDays(year, month);
+                month++;
+            }
+            return { year: year, month: month, day: dayIndex + 1, weekday: npNow.getUTCDay() };
+        }
+
+        function getNepaliDateTimeText(nowMs) {
+            const npNow = new Date((nowMs === undefined ? Date.now() : nowMs) + (5 * 60 + 45) * 60 * 1000);
+            const h24 = npNow.getUTCHours();
+            const mi = String(npNow.getUTCMinutes()).padStart(2, '0');
+            const se = String(npNow.getUTCSeconds()).padStart(2, '0');
+            let period = 'राति';
+            if (h24 >= 4 && h24 < 12) period = 'बिहान';
+            else if (h24 >= 12 && h24 < 16) period = 'दिउँसो';
+            else if (h24 >= 16 && h24 < 20) period = 'साँझ';
+            const h12 = (h24 % 12) === 0 ? 12 : (h24 % 12);
+            const timeText = `${period} ${toNepaliNumerals(h12)}:${toNepaliNumerals(mi)}:${toNepaliNumerals(se)}`;
+
+            const bs = getTodayBS(nowMs);
+            if (!bs) return `समय: ${timeText}`;
+            return `${toNepaliNumerals(bs.year)} साल ${NEPALI_MONTH_NAMES[bs.month - 1]} ${toNepaliNumerals(bs.day)} गते, ${NEPALI_WEEKDAYS[bs.weekday]} | समय: ${timeText}`;
+        }
+
+        function updateNepaliDateTime() {
+            const el = document.getElementById('nepali_datetime');
+            if (el) el.innerText = getNepaliDateTimeText();
+        }
+        updateNepaliDateTime();
+        setInterval(updateNepaliDateTime, 1000);
     </script>
 </body>
 </html>
